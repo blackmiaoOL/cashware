@@ -1,0 +1,107 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+D:\KOBE_PROJECTS\Android\ADK\STMF4_ADK_04052012\MDK\STM32F407VGT6.uvproj
+Project File Date:  05/03/2012
+
+<h2>Output:</h2>
+Build target 'STM32G407VGT6'
+compiling main.c...
+compiling stm32f4xx_it.c...
+compiling system_stm32f4xx.c...
+compiling uart_debug.c...
+compiling usb_bsp.c...
+compiling usbh_adk_core.c...
+..\src\usbh_adk_core.c(321): warning:  #550-D: variable "HCD_Status" was set but never used
+..\src\usbh_adk_core.c(322): warning:  #550-D: variable "HCD_GXferCnt" was set but never used
+compiling usbh_usr.c...
+..\src\usbh_usr.c(253): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+..\src\usbh_usr.c(256): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+..\src\usbh_usr.c(259): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+..\src\usbh_usr.c(262): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+..\src\usbh_usr.c(265): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+..\src\usbh_usr.c(345): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+compiling xprintf.c...
+compiling stm32f4xx_rcc.c...
+compiling stm32f4xx_tim.c...
+compiling stm32f4xx_usart.c...
+compiling stm32f4xx_exti.c...
+compiling stm32f4xx_gpio.c...
+compiling misc.c...
+compiling stm32f4xx_syscfg.c...
+compiling usbh_core.c...
+compiling usbh_hcs.c...
+compiling usbh_ioreq.c...
+compiling usbh_stdreq.c...
+compiling usb_core.c...
+compiling usb_hcd.c...
+compiling usb_hcd_int.c...
+compiling stm32f4_discovery.c...
+assembling startup_stm32f4xx.s...
+startup_stm32f4xx.s: error: A1023E: File "startup_stm32f4xx.s" could not be opened: No such file or directory
+Target not created
+Build target 'STM32G407VGT6'
+assembling startup_stm32f4xx.s...
+..\src\startup_stm32f4xx.s(1): error: A1167E: Invalid line start 
+..\src\startup_stm32f4xx.s(2): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(3): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(4): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(5): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(6): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(7): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(8): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(9): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(10): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(11): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(12): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(13): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(14): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(15): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(16): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(17): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(18): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(19): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(20): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(21): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(22): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(23): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(24): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(25): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(26): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(27): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(28): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(29): error: A1159E: Label missing from line start
+..\src\startup_stm32f4xx.s(30): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(31): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(33): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(34): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(35): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(36): error: A1137E: Unexpected characters at end of line
+..\src\startup_stm32f4xx.s(38): error: A1163E: Unknown opcode g_pfnVectors , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(39): error: A1163E: Unknown opcode Default_Handler , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(41): error: A1163E: Unknown opcode start , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(42): error: A1163E: Unknown opcode in , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(43): error: A1163E: Unknown opcode _sidata , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(44): error: A1163E: Unknown opcode start , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(45): error: A1163E: Unknown opcode _sdata , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(46): error: A1167E: Invalid line start 
+..\src\startup_stm32f4xx.s(47): error: A1163E: Unknown opcode _edata , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(48): error: A1163E: Unknown opcode start , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(49): error: A1163E: Unknown opcode _sbss , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(50): error: A1167E: Invalid line start 
+..\src\startup_stm32f4xx.s(51): error: A1163E: Unknown opcode _ebss , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(52): error: A1163E: Unknown opcode stack , expecting opcode or Macro
+..\src\startup_stm32f4xx.s(54): error: A1167E: Invalid line start 
+Target not created
+Build target 'STM32G407VGT6'
+linking...
+.\OBJ\STM32F407VGT6.sct(7): error: L6236E: No section matches selector - no section to be FIRST/LAST.
+".\OBJ\STM32F407VGT6.axf" - 1 Error(s), 0 Warning(s).
+Build target 'STM32G407VGT6'
+assembling startup_stm32f4xx.s...
+linking...
+Program Size: Code=43436 RO-data=520 RW-data=216 ZI-data=3560  
+FromELF: creating hex file...
+".\OBJ\STM32F407VGT6.axf" - 0 Error(s), 0 Warning(s).
