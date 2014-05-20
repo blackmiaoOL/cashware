@@ -274,7 +274,7 @@ static void rt_thread_entry_commu(void* parameter)
                 mail[0]=0;
                commu_send(mail,9); 
             }
-            rt_thread_delay(10);
+            rt_thread_delay(3);
             break;
         }
         case 10:
@@ -349,7 +349,7 @@ static void rt_thread_entry_Flash_Read(void* parameter)
 
     SCPE(PERIOB);
     IOConfig(IOBB,PIN6,xialashuru);
-    rt_thread_delay(1*RT_TICK_PER_SECOND);
+    rt_thread_delay(100);
     //	DBG("--------------------SCAN_START\r\n");
     rt_thread_delay(100);
     while(1)
