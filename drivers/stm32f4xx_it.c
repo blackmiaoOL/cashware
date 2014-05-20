@@ -224,8 +224,7 @@ void USART6_IRQHandler(void)
 {
 #ifdef RT_USING_UART6
     extern struct rt_device uart6_device;
-	extern void rt_hw_serial_isr(struct rt_device *device);\
-    pintrf("fuck you ");
+	extern void rt_hw_serial_isr(struct rt_device *device);
     
     /* enter interrupt */
     rt_interrupt_enter();
