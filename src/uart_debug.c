@@ -21,7 +21,7 @@ const uint16_t COM_TX_AF        = GPIO_AF_USART6;
 const uint16_t COM_RX_AF        = GPIO_AF_USART6;
 
 void uart_debug_init()
-{
+{    
 	  USART_InitTypeDef USART_InitStructure;
 	  GPIO_InitTypeDef GPIO_InitStructure;
 	  /* USARTx configured as follow:
@@ -68,7 +68,7 @@ void uart_debug_init()
 
 	  /* Enable USART */
 	  USART_Cmd(COM_USART, ENABLE);
-		
+        
 		/* Flush the USART buffer */
 		while (USART_GetFlagStatus(USART6, USART_FLAG_TC) == RESET);
 		
