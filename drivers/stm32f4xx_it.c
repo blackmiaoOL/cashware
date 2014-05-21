@@ -30,6 +30,9 @@
 #include "usb_hcd_int.h"
 #include "usbh_core.h"
 #include "stm32f4xx_it.h"
+#include <rtthread.h>
+#include "board.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
