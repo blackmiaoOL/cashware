@@ -475,14 +475,18 @@ int rt_application_init()
             sizeof(thread_Flash_Read_stack),11,5);
     rt_thread_startup(&thread_Flash_Read);
 
-    rt_thread_init(&thread_ld3320,
-                   "ld3320",
-                   rt_thread_entry_ld3320,
-                   RT_NULL,
-                   &thread_ld3320_stack[0],
-            sizeof(thread_ld3320_stack),12,5);
-    rt_thread_startup(&thread_ld3320);
+//    rt_thread_init(&thread_ld3320,
+//                   "ld3320",
+//                   rt_thread_entry_ld3320,
+//                   RT_NULL,
+//                   &thread_ld3320_stack[0],
+//            sizeof(thread_ld3320_stack),12,5);
+//    rt_thread_startup(&thread_ld3320);
 
+    {
+        extern void Jacob_appinit();
+        Jacob_appinit();
+    }
 
     mq_commu=rt_mq_create ("mq_commu", 9, 500, RT_IPC_FLAG_FIFO);
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
