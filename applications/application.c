@@ -327,7 +327,7 @@ static void rt_thread_entry_ld3320(void* parameter)
 		
         while(PCin(2)!=0)
         {
-            rt_thread_delay(3);
+            rt_thread_delay(3); 
         }
         ProcessInt0();
         LD_loop();
@@ -349,7 +349,7 @@ static void rt_thread_entry_Flash_Read(void* parameter)
 
     SCPE(PERIOB);
     IOConfig(IOBB,PIN6,xialashuru);
-    rt_thread_delay(1*RT_TICK_PER_SECOND);
+    rt_thread_delay(100);
     //	DBG("--------------------SCAN_START\r\n");
     rt_thread_delay(100);
     while(1)
@@ -428,7 +428,7 @@ static void rt_thread_entry_usb(void* parameter)
 	while(1)
 	{
 		USBH_Process(&USB_OTG_Core_dev , &USB_Host);
-        rt_thread_delay(1);
+        rt_thread_delay(1);       
 	} 
 }
 extern  char thread_app_stack[1024];

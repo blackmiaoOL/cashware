@@ -6,7 +6,8 @@
 bool key_capture(u8 *buf);
 void key_cap_Init(void);
 void press_string_pure(u16 *buf,u32 lenth);
-s8 control_key_index(const u8 *buf);
+s8 control_key_index(const char buf[]);
+extern const u8  ascii2usb[128];
 #define LCtrl       0x1
 #define LShift     0x2
 #define LAlt        0x4

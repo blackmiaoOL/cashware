@@ -133,7 +133,7 @@ const u8 key_string[key_string_num][key_stinrg_max_word]={
 u8  key_changetable[]={
     0,1,2,3,    4,5,6,7
 };
-s8 control_key_index(const u8 *buf)
+s8 control_key_index(const char buf[])
 {
     u8 i=0;
     for(i=0;i<8;i++)

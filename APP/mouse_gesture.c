@@ -4,6 +4,7 @@
 #include "rtthread.h"
 #include "math.h"
 #include "app_interface.h"
+#include "windows_api.h"
 struct mouse_pos{
     s16 x;
     s16 y;
@@ -84,7 +85,7 @@ bool mouse_capture(u8 *mail)
     return true;
 }
 extern rt_mq_t mq_commu;
-extern const u8  ascii2usb[128];
+
 static void mouse_ana(HID_MOUSE_Data_TypeDef *mouse)
 {
     
@@ -113,20 +114,40 @@ static void mouse_ana(HID_MOUSE_Data_TypeDef *mouse)
     }
     else
     {
-        double fangcha;
-        fangcha=qiufangcha(track,key_cnt);
-        DBG("====%f",fangcha);
-        if(fangcha>0.9||fangcha<-0.9)
+        u32 i=0;
+        double xiangguan;
+        double xielv;
+        double x_average;
+        double y_average;
+        xiangguan=qiufangcha(track,key_cnt);
+        xielv=(double)(track[key_cnt-1].y-track[0].y)/((track[key_cnt-1].x==track[0].x)?1:(track[key_cnt-1].x-track[0].x));
+        for(i=0;i<key_cnt;i++)
+        {
+            x_average+=track[i].x;
+        }
+        x_average/=key_cnt;
+        for(i=0;i<key_cnt;i++)
+        {
+            y_average+=track[i].y;
+        }
+        y_average/=key_cnt;
+        DBG("\r\nxiangguan=%f",xiangguan);
+        DBG("\r\nxielv=%f",xielv);
+        DBG("\r\nx_av=%f",x_average);
+        DBG("\r\ny_av=%f",y_average);
+        if(abs(xiangguan)>0.9||abs(x_average)<20||abs(y_average)<20)//judge line
         {   
-           u16 buf[6];
-           buf[0]=(1<<9)+(1<<control_key_index("lalt"));//press alt
-           buf[1]=ascii2usb[32];
-           buf[2]=(1<<10)+(1<<2);//release alt
-           buf[3]=(1<<9)+(1<<control_key_index("lctrl"));//press ctrl
-           buf[4]=ascii2usb['n'];
-           buf[5]=(1<<10)+(1<<control_key_index("lctrl"));
-           //DBG("wwww%dwwww",buf[1]);
-           press_string_pure(buf,6);
+            if(xielv<-0.3&&xielv>-3)//left down
+            {
+                win_api_window_min();
+            }
+            else if(xielv>-3&&xielv<3)//horizontal
+            {
+                if(track[key_cnt-1].x>0)
+                win_api_window_toRight();
+                else
+                    win_api_window_toLeft();
+            }
         }
     }
 }
