@@ -6,10 +6,10 @@ void rt_app_entry(void *parameter)
 {
 //    while (USART_GetFlagStatus(USART6, USART_FLAG_RXNE) == RESET);
 //        rt_kprintf("fuck\n");  
-    while(1)
-    {
-        rt_thread_delay(2);
-    }
+//    while(1)
+//    {
+//        rt_thread_delay(2);
+//    }
 }
 
 

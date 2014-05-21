@@ -68,7 +68,7 @@ void commu_Init()
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
 
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-//	SPI_InitStructure.SPI_CRCPolynomial = 7;
+	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI1, &SPI_InitStructure);
 
 	SPI_Cmd(SPI1, ENABLE);
