@@ -274,7 +274,7 @@ static void rt_thread_entry_commu(void* parameter)
                 mail[0]=0;
                commu_send(mail,9); 
             }
-            rt_thread_delay(3);
+            rt_thread_delay(10);
             break;
         }
         case 10:
@@ -327,7 +327,7 @@ static void rt_thread_entry_ld3320(void* parameter)
 		
         while(PCin(2)!=0)
         {
-            rt_thread_delay(3);
+            rt_thread_delay(3); 
         }
         ProcessInt0();
         LD_loop();
@@ -428,7 +428,7 @@ static void rt_thread_entry_usb(void* parameter)
 	while(1)
 	{
 		USBH_Process(&USB_OTG_Core_dev , &USB_Host);
-        rt_thread_delay(1);
+        rt_thread_delay(1);       
 	} 
 }
 extern  char thread_app_stack[1024];
