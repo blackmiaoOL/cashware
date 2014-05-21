@@ -222,7 +222,7 @@ void USART3_IRQHandler(void)
     rt_interrupt_leave();
 #endif
 }
-
+#define RT_USING_UART6
 void USART6_IRQHandler(void)
 {
 #ifdef RT_USING_UART6
