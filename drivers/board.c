@@ -100,7 +100,7 @@ void rt_hw_board_init()
     delay_ms2(2);
 //    uart_debug_init();
     rt_hw_usart_init();
-    delay_ms2(2);
+//    delay_ms2(2);
     rt_hw_LED_init();
 
     rt_hw_OLED_init();

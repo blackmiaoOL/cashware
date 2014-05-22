@@ -356,18 +356,18 @@ uint8 RunASR(void)
 {
 	uint8 i=0;
 	uint8 asrflag=0;
-	delay_ms2(10);
 
+    rt_thread_delay(2);
 	DBG("\r\nstart_init");
 	for (i=0; i<5; i++)			//	防止由于硬件原因导致LD3320芯片工作不正常，所以一共尝试5次启动ASR识别流程
 	{
 		LD_AsrStart();			//初始化ASR
-		LD3320_delay(10);
+		rt_thread_delay(3);
 		if (LD_AsrAddFixed()==0)	//添加关键词语到LD3320芯片中
 		{
 			DBG("\r\nerror0");
 			LD_reset();			//	LD3320芯片内部出现不正常，立即重启LD3320芯片
-			LD3320_delay(10);			//	并从初始化开始重新ASR识别流程
+		//	LD3320_delay(10);			//	并从初始化开始重新ASR识别流程
 			continue;
 		}
 
@@ -377,7 +377,7 @@ uint8 RunASR(void)
 		{
 			DBG("\r\nerror1");
 			LD_reset();			//	LD3320芯片内部出现不正常，立即重启LD3320芯片
-			LD3320_delay(10);			//	并从初始化开始重新ASR识别流程
+			rt_thread_delay(10);			//	并从初始化开始重新ASR识别流程
 			continue;
 		}
 

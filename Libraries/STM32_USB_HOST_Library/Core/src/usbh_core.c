@@ -254,7 +254,7 @@ void USBH_Process(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
         if (HCD_IsDeviceConnected(pdev))
         {
             phost->gState = HOST_DEV_ATTACHED;
-            USB_OTG_BSP_mDelay(100);//M("may be source")
+            USB_OTG_BSP_mDelay(10);//M("may be source")
         }
         break;
 

@@ -147,10 +147,7 @@ int main(void)
 	rt_hw_interrupt_disable();
 
 	/* startup RT-Thread RTOS */
-	
-	
-	
-	//delay_ms2(10000);
+
 	rtthread_startup();
 
 	return 0;

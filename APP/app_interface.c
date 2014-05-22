@@ -206,7 +206,6 @@ u8 key_table_process(u8* read_buf,u32 size)
     u32 write_cnt=0;
     u8 read_state=0;
     u32 line_ptr[3];
-    //delay_ms2(2000);
     for(i=0;i<size;i++)
     {
         char char_this=read_buf[i];
@@ -695,18 +694,17 @@ u8 mode_line_process(u8* read_buf,u32 ptr[2])
 //                   sizeof(my_id)};
 //    u8 filter_cnt=0;
 
-    DBG("line_cnt=%d~\r\n",line_cnt);
+    //DBG("line_cnt=%d~\r\n",line_cnt);
     if(read_buf[ptr[0]]==';')
     {
         line_cnt++;
         return 0;
     }
 
-    // delay_ms2(2000);
-
     if(token_ana(&token_queue,read_buf,ptr))
         return 1;
   //  DBG("ANASUCCESS");
+  #undef ANA_DEBUG
 #ifdef ANA_DEBUG
     for(i=0;i<token_queue.lenth;i++)
     {
@@ -767,7 +765,7 @@ u8 mode_line_process(u8* read_buf,u32 ptr[2])
                     block.filter.control_filter[block.filter.control_filter_cnt++]=
                             control_key_decode(token_this->content&(0x7f))<<4;
                 }
-                DBG("token_dir_ctrl\r\n");
+                //DBG("token_dir_ctrl\r\n");
                 block.state=contrl_key_gotton;
             }
             else if(block.state==block_raw)
@@ -813,7 +811,7 @@ u8 mode_line_process(u8* read_buf,u32 ptr[2])
                     return 1;
                 }
             }
-            DBG("line%d,%d general key gotton!\r\n",line_cnt,key_cnt);
+            //DBG("line%d,%d general key gotton!\r\n",line_cnt,key_cnt);
             key_array=rt_malloc(key_cnt<<1);
             for(k=i;k<token_queue.lenth;k++)
             {
@@ -928,7 +926,7 @@ end:;
     //if(ana_state!=?)
 
 
-    printf("\r\n");
+    //printf("\r\n");
 	return 0;
 }
 u8 key_mode_process(u8* read_buf,u32 size)
@@ -937,7 +935,7 @@ u8 key_mode_process(u8* read_buf,u32 size)
     u32 write_cnt=0;
     u8 read_state=0;
     u32 line_ptr[2];
-    //delay_ms2(2000);
+
     for(i=0;i<size;i++)
     {
         char char_this=read_buf[i];
@@ -1255,7 +1253,7 @@ void press_string_pure(u16 *buf,u32 lenth)
         }
         
         
-        printf("press%d\r\n",buf_out[3]);
+        //printf("press%d\r\n",buf_out[3]);
         if(i!=lenth-1)
         buf_clear();
     }

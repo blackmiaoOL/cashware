@@ -13,7 +13,7 @@
 #define OLED_SCK_L      IO0(base[3],PIN[3])
 #define OLED_RST_H      IO1(base[4],PIN[4])
 #define OLED_RST_L      IO0(base[4],PIN[4])
-#define delay_long      delay_ms2(200)
+#define delay_long      delay_ms2(30)
 #define delay_short     delay_us2(1)
 //static struct OLED_IO_info* info;
 static u16 clk[5]={PERIOA,PERIOA,PERIOA,PERIOA,PERIOA};//DC CS MOSI SCK RST
@@ -58,15 +58,6 @@ static rt_err_t rt_OLED_init (rt_device_t dev)
 }
 static rt_err_t rt_OLED_open(rt_device_t dev, rt_uint16_t oflag)
 {
-
-//	while(1)
-//	{
-//		OLED_MOSI_H;
-//		delay_ms2(1000);
-//		OLED_MOSI_L;
-//		delay_ms2(1000);
-//	}
-
     return RT_EOK;
 }
 /* ??¡À??¨¨¡À? */
@@ -192,7 +183,7 @@ void rt_hw_OLED_init()
 static void delay_us2(u16 us)
 {
     u32 j=0;
-    for(j=0;j<us*70;j++);
+    for(j=0;j<us*2;j++);
 }
 
 
@@ -233,7 +224,6 @@ static void OLED_IO_Init()
 {
     u8 i=0;
 	SCPE(PERIOC);
-	//delay_ms2(1000);
 	IOConfig(IOCB,PIN1,tuiwanshuchu);
     for(i=0;i<5;i++)
     {
@@ -259,10 +249,6 @@ void OLED_Init(void)
     OLED_RST_L;
     delay_long;
     OLED_RST_H;
-    //delay_long;
-    delay_us2(1);
-
-
     //??????????????????????????¡Á??????¡À??????????RC?????¨º¡À?
 
     OLED_WrCmd(0xae);//--turn off oled panel
@@ -294,7 +280,7 @@ void OLED_Init(void)
     OLED_WrCmd(0xa6);// Disable Inverse Display On (0xa6/a7)
     OLED_WrCmd(0xaf);//--turn on oled panel
     // OLED_Fill(0x00);  //????????
-    OLED_CLS();
+    //OLED_CLS();
     OLED_Set_Pos(0,0);
     //OLED_write_char(1,1,49);
 }
@@ -364,7 +350,7 @@ void OLED_WrCmd(unsigned char cmd)
         OLED_SCK_H;
         OLED_SCK_L;
         cmd<<=1;
-        delay_short;
+  //      delay_short;
     }
     OLED_CS_H;
 }

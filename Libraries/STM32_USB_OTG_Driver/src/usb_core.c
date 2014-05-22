@@ -746,7 +746,7 @@ void USB_OTG_DriveVbus (USB_OTG_CORE_HANDLE *pdev, uint8_t state)
     USB_OTG_WRITE_REG32(pdev->regs.HPRT0, hprt0.d32);
   }
   
-  USB_OTG_BSP_mDelay(200);
+  USB_OTG_BSP_mDelay(20);
 }
 /**
 * @brief  USB_OTG_EnableHostInt: Enables the Host mode interrupts

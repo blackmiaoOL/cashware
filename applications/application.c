@@ -128,15 +128,7 @@ void blue_tooth_Init()
 //  //  blue_puts("AT+ROLE=0\r\n");
 //    rt_thread_delay(1000);
     IO0(IOCB,PIN13);
-    rt_thread_delay(300);
-    while(0)
-    {
-        u8 buf[2];
-        buf[0]=UART4->DR+0x30;
-        buf[1]=0;
-        cmd(buf);
-        rt_thread_delay(1000);
-    } 
+
 }
 #include "usbh_hid_mouse.h"
 u8 blue_choose=0;
@@ -349,9 +341,9 @@ static void rt_thread_entry_Flash_Read(void* parameter)
 
     SCPE(PERIOB);
     IOConfig(IOBB,PIN6,xialashuru);
-    rt_thread_delay(100);
+   // rt_thread_delay(100);
     //	DBG("--------------------SCAN_START\r\n");
-    rt_thread_delay(100);
+  rt_thread_delay(100);
     while(1)
     {
         while(PBin(6)==0)
@@ -440,7 +432,7 @@ int rt_application_init()
 
 
     SPI_Flash_Init();
-    delay_ms2(2);
+    //delay_ms2(2);
     rt_thread_init(&thread_usb,
                    "thread_usb",
                    rt_thread_entry_usb,
@@ -475,13 +467,13 @@ int rt_application_init()
             sizeof(thread_Flash_Read_stack),11,5);
     rt_thread_startup(&thread_Flash_Read);
 
-//    rt_thread_init(&thread_ld3320,
-//                   "ld3320",
-//                   rt_thread_entry_ld3320,
-//                   RT_NULL,
-//                   &thread_ld3320_stack[0],
-//            sizeof(thread_ld3320_stack),12,5);
-//    rt_thread_startup(&thread_ld3320);
+    rt_thread_init(&thread_ld3320,
+                   "ld3320",
+                   rt_thread_entry_ld3320,
+                   RT_NULL,
+                   &thread_ld3320_stack[0],
+            sizeof(thread_ld3320_stack),12,5);
+    rt_thread_startup(&thread_ld3320);
 
     {
         extern void Jacob_appinit();

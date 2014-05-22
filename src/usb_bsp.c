@@ -378,7 +378,7 @@ void  USB_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev)
   /* By Default, DISABLE is needed on output of the Power Switch */
   GPIO_SetBits(HOST_POWERSW_PORT, HOST_POWERSW_VBUS);
 
-  USB_OTG_BSP_mDelay(200);   /* Delay is need for stabilising the Vbus Low
+  USB_OTG_BSP_mDelay(20);   /* Delay is need for stabilising the Vbus Low
   in Reset Condition, when Vbus=1 and Reset-button is pressed by user */
 #endif  
 }
@@ -450,7 +450,7 @@ void USB_OTG_BSP_mDelay (const uint32_t msec)
 #ifdef USE_ACCURATE_TIME  
     BSP_Delay(msec,TIM_MSEC_DELAY);   
 #else
-    USB_OTG_BSP_uDelay(msec * 1000);   
+    USB_OTG_BSP_uDelay(msec * 100);   
 #endif    
 
 }
