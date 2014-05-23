@@ -92,23 +92,15 @@ void delay_ms2(u32 ms);
 void uart_debug_init(void);
 void rt_hw_board_init()
 {
-    /* NVIC Configuration */
     NVIC_Configuration();
-
-    /* Configure the SysTick */
     SysTick_Configuration();
     delay_ms2(2);
-//    uart_debug_init();
     rt_hw_usart_init();
-//    delay_ms2(2);
     rt_hw_LED_init();
-
     rt_hw_OLED_init();
     LD3320_GPIO_Cfg();
-
 #ifdef RT_USING_CONSOLE
     rt_console_set_device(CONSOLE_DEVICE);
-
 #endif
 
 }

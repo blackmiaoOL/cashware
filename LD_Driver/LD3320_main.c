@@ -722,5 +722,27 @@ uint8 LD_AsrAddFixed(void)
 }
 
 
+u8 LD3320_WrDat(unsigned char dat);
+
+void LD_WriteReg(uint8 data1,uint8 data2)
+{
+	LD_CS_L();
+	LD3320_WrDat(0x04);
+	LD3320_WrDat(data1);
+	LD3320_WrDat(data2);
+	LD_CS_H();
+}
+
+uint8 LD_ReadReg(uint8 reg_add)
+{
+	uint8 i;
+	LD_CS_L();
+	LD3320_WrDat(0x05);
+	LD3320_WrDat(reg_add);
+	i=LD3320_WrDat(0x00);	/*¶ÁSPI*/
+	LD_CS_H();
+	return(i);
+}
+
 
 

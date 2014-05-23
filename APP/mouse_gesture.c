@@ -144,7 +144,7 @@ static void mouse_ana(HID_MOUSE_Data_TypeDef *mouse)
             else if(xielv>-3&&xielv<3)//horizontal
             {
                 if(track[key_cnt-1].x>0)
-                win_api_window_toRight();
+                    win_api_window_toRight();
                 else
                     win_api_window_toLeft();
             }

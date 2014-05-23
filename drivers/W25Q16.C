@@ -1,69 +1,19 @@
 #include "w25q16.h"
-
-//#include "flash.h" 
 #include "spi.h"
-//#include "delay.h"   
-//////////////////////////////////////////////////////////////////////////////////	 
-//?????????,??????,??????????
-//ALIENTEK??STM32???
-//W25Q64 ??	   
-//????@ALIENTEK
-//????:www.openedv.com
-//????:2012/9/9
-//??:V1.0
-//????,?????
-//Copyright(C) ????????????? 2009-2019
-//All rights reserved									  
-//////////////////////////////////////////////////////////////////////////////////
-
 
 u16 SPI_FLASH_TYPE=W25Q64;//????25Q64
 
-//4Kbytes???Sector
-//16????1?Block
-//W25X16
-//???2M??,??32?Block,512?Sector 
-
-//???SPI FLASH?IO?
 void SPI_Flash_Init(void)
 {	
-//  	GPIO_InitTypeDef GPIO_InitStructure;
-//	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOB|RCC_APB2Periph_GPIOD|RCC_APB2Periph_GPIOG, ENABLE );//PORTB???? 
 
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;  // PB12 ?? 
-// 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //????
-//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-// 	GPIO_Init(GPIOB, &GPIO_InitStructure);
-// 	GPIO_SetBits(GPIOB,GPIO_Pin_12);
-
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;  // PD2 ?? 
-// 	GPIO_Init(GPIOD, &GPIO_InitStructure);
-// 	GPIO_SetBits(GPIOD,GPIO_Pin_2);
-
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;  // PG7 ?? 
-// 	GPIO_Init(GPIOG, &GPIO_InitStructure);
-// 	GPIO_SetBits(GPIOG,GPIO_Pin_7);
 	SCPE(PERIOB);
 	IOConfig(IOBB,PIN12,tuiwanshuchu);
 	IO1(IOBB,PIN12);
 	SPI2_Init();		   	//???SPI
 	SPI2_SetSpeed(SPI_BaudRatePrescaler_2);//???18M??,????
 	SPI_FLASH_TYPE=SPI_Flash_ReadID();//??FLASH ID.  
-	
-
-
-	
-
 }  
 
-//??SPI_FLASH??????
-//BIT7  6   5   4   3   2   1   0
-//SPR   RV  TB BP2 BP1 BP0 WEL BUSY
-//SPR:??0,????????,??WP??
-//TB,BP2,BP1,BP0:FLASH???????
-//WEL:?????
-//BUSY:????(1,?;0,??)
-//??:0x00
 u8 SPI_Flash_ReadSR(void)   
 {  
 	u8 byte=0;   
@@ -73,8 +23,7 @@ u8 SPI_Flash_ReadSR(void)
 	SPI_FLASH_CS_H;                            //????     
 	return byte;   
 } 
-//?SPI_FLASH?????
-//??SPR,TB,BP2,BP1,BP0(bit 7,5,4,3,2)???!!!
+
 void SPI_FLASH_Write_SR(u8 sr)   
 {   
 	SPI_FLASH_CS_L;                            //????   
