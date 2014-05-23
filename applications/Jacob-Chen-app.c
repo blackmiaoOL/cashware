@@ -18,7 +18,7 @@ void rt_app_entry(void *parameter)
 //    {
 //        rt_thread_delay(2);
 //    }
-    
+#define     USE_INI
 #ifdef USE_INI //make sure you have profile.ini
 //    if(!write_profile_string(section,key,"Tony",file))
 //    {

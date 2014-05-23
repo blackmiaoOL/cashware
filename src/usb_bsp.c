@@ -22,7 +22,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usb_bsp.h"
 #include "stm32f4xx.h"
-#include "stm32f4_discovery.h"
+
 #include "stm32f4xx_conf.h"
 
 /** @addtogroup USBH_USER

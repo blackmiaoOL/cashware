@@ -9,9 +9,6 @@ u8 buf_out[9];
 
 void buf_clear(void);
 extern rt_mailbox_t mb_commu;
-
-
-
 cap key_cap_free[key_cap_cnt_all];
 //st_key_cap key_cap_use[200];
 cap* cap_use_head=RT_NULL;

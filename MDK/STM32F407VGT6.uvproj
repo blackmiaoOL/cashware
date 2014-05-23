@@ -439,11 +439,6 @@
           <GroupName>periph</GroupName>
           <Files>
             <File>
-              <FileName>stm32f4_discovery.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Utilities\STM32_EVAL\stm32f4_discovery.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f4xx_rcc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_rcc.c</FilePath>
@@ -636,17 +631,7 @@
             <File>
               <FileName>LD3320_main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\LD_Driver\LD3320_main.c</FilePath>
-            </File>
-            <File>
-              <FileName>LDChip.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\LD_Driver\LDChip.c</FilePath>
-            </File>
-            <File>
-              <FileName>Reg_RW.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\LD_Driver\Reg_RW.c</FilePath>
+              <FilePath>..\drivers\LD3320_main.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -767,6 +752,16 @@
               <FileName>inifile.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\inifile.c</FilePath>
+            </File>
+            <File>
+              <FileName>ahk_analyser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\ahk_analyser.c</FilePath>
+            </File>
+            <File>
+              <FileName>key_remap.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\key_remap.c</FilePath>
             </File>
           </Files>
         </Group>

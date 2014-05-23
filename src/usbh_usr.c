@@ -24,7 +24,6 @@
 #include "usbh_hid_mouse.h"
 #include "usbh_hid_keybd.h"
 #include "stm32f4xx.h"
-#include "stm32f4_discovery.h"
 #include "debug.h"
 #include "commu.h"
 

@@ -22,7 +22,7 @@ static u32 PIN[5]={PIN3,PIN4,PIN7,PIN5,PIN2};
 #endif
 typedef  unsigned char byte;
 static void OLED_Init(void);
-static void OLED_CLS(void);
+//static void OLED_CLS(void);
 static void OLED_Clear(void);
 //static void OLED_write_char(u8 x,u8 y,char aa);
 //static void OLED_P6x8Str(byte x,byte y,const byte ch[]);
@@ -373,18 +373,18 @@ void OLED_Fill(unsigned char bmp_dat)
         {	OLED_WrDat(bmp_dat);}
     }
 }
-void OLED_CLS(void)
-{
-    unsigned char y,x;
-    for(y=0;y<8;y++)
-    {
-        OLED_WrCmd(0xb0+y);
-        OLED_WrCmd(0x01);
-        OLED_WrCmd(0x10);
-        for(x=0;x<X_WIDTH;x++)
-            OLED_WrDat(0);
-    }
-}
+//void OLED_CLS(void)
+//{
+//    unsigned char y,x;
+//    for(y=0;y<8;y++)
+//    {
+//        OLED_WrCmd(0xb0+y);
+//        OLED_WrCmd(0x01);
+//        OLED_WrCmd(0x10);
+//        for(x=0;x<X_WIDTH;x++)
+//            OLED_WrDat(0);
+//    }
+//}
 
 
 void OLED_Clear()

@@ -18,7 +18,7 @@
 //#include "mmc_sd.h"
 #include "commu.h"
 #include "mass_mal.h"
-#include "flash.h"
+//#include "flash.h"
 																			   
 long long Mass_Memory_Size[MAX_LUN+1];
 u32 Mass_Block_Size[MAX_LUN+1];
@@ -64,7 +64,7 @@ u16 MAL_Write(u8 lun, u32 Memory_Offset, u32 *Writebuff, u16 Transfer_Length)
 			break;							  
 		case 1:		 
 			STA=0;
-			SPI_Flash_Write((u8*)Writebuff, Memory_Offset, Transfer_Length);   		  
+			//SPI_Flash_Write((u8*)Writebuff, Memory_Offset, Transfer_Length);   		  
 			break; 
 		default:
 			return MAL_FAIL;
@@ -91,7 +91,7 @@ u16 MAL_Read(u8 lun, u32 Memory_Offset, u32 *Readbuff, u16 Transfer_Length)
 			break;			    
 		case 1:	 
 			STA=0;
-			SPI_Flash_Read((u8*)Readbuff, Memory_Offset, Transfer_Length);   		  
+			//SPI_Flash_Read((u8*)Readbuff, Memory_Offset, Transfer_Length);   		  
 			break;	  
 		default:
 			return MAL_FAIL;
