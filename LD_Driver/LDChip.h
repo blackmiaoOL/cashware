@@ -119,7 +119,7 @@ extern uint8  nLD_Mode;
 #define CODE_R 22/*ºìÅÆ*/
 #define CODE_S 23/*ÖÇÁ¦»Ø´ð*/
 #define CODE_T 24
-void  LD3320_delay(unsigned long uldata);
+
 
 #define MIC_VOL 0x43
 #endif

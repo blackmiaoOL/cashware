@@ -1,43 +1,8 @@
-/***************************乐声电子科技有限公司****************************
-**  工程名称：YS-V0.4语音识别开发板程序
-**	CPU: STM32f103RCT6
-**	晶振：8MHZ
-**	波特率：9600 bit/S
-**	配套产品信息：YS-V0.4语音识别开发板
-**                http://yuesheng001.taobao.com
-**  作者：zdings
-**  联系：751956552@qq.com
-**  修改日期：2012.4.11
-**  说明：本程序 具备语音识别、串口通信、开发板基本功能演示。
-***************************乐声电子科技有限公司******************************/
-#include "includes.h"
+#include "LDchip.h"
+#include "Reg_RW.h"
 #include <rtthread.h>
-//#include "usart.h"
 #include "debug.h"
-//#include "stm32f10x.h"
-//#include "stm32f10x_spi.h"
-//#include "stm32f10x_exti.h"
-//#include "stm32f10x_nvic.h"
-//#include "core_cm3_m.h"
-//#include "sys.h"
-//#include "MOTO.h"
-#define USART1              ((USART_TypeDef *) USART1_BASE)
-#define GPIOA               ((GPIO_TypeDef *) GPIOA_BASE)
-#define GPIOB               ((GPIO_TypeDef *) GPIOB_BASE)
-#define SPI2                ((SPI_TypeDef *) SPI2_BASE)
-/*************端口信息********************
- * 接线说明
-
- * CS   	PB12
- * P2/SDCK  PB13
- * P1/SDO   PB14
- * P0/SDI   PB15
- * IRQ      PB11
-
- * CLK      PA8
-*****************************************/
-
-
+#include "usbh_hid_mouse.h"
 
 /************************************************************************************
 //	nAsrStatus 用来在main主程序中表示程序运行的状态，不是LD3320芯片内部的状态寄存器
@@ -53,7 +18,6 @@
 	uint8 end_loop=0;
 	u8 isplaying=0;
 	extern void (*exe_func)(void);
-void LD3320_Init(void);
 
 uint8 RunASR(void);
 void ProcessInt0(void);
@@ -61,7 +25,7 @@ void LD3320_EXTI_Cfg(void);
 void LD3320_Spi_cfg(void);
 void LD3320_GPIO_Cfg(void);
 void LED_gpio_cfg(void);
-
+#define toString(a) #a
 /***********************************************************
 * 名    称： LD3320_
 *
@@ -72,178 +36,164 @@ void LED_gpio_cfg(void);
 * 说    明：
 * 调用方法： 
 **********************************************************/ 
+mouse_data ms_data;
 extern rt_mq_t mq_commu;
+void mouse_data_clear()
+{
+    ms_data.button=0;
+    ms_data.x=0;
+    ms_data.y=0;
+    ms_data.z=0;
+}
 void LD_loop()
 {
-    
     u8 mail[9];
 	u8 i=0;
-loop:if(nAsrStatus!=LD_ASR_RUNING)
-     {
+loop:
+    if(nAsrStatus!=LD_ASR_RUNING)
+    {
         DBG("***%d****",nAsrStatus);
         if(nAsrStatus==0x31)
         rt_thread_delay(1000);
-     }
+    }
         
     switch(nAsrStatus)
     {
         case LD_ASR_RUNING:
         case LD_ASR_ERROR:
-                            break;
+            break;
         case LD_ASR_NONE:
-
-                    nAsrStatus=LD_ASR_RUNING;
-                    if (RunASR()==0)	//	启动一次ASR识别流程：ASR初始化，ASR添加关键词语，启动ASR运算
-                    {
-                        nAsrStatus = LD_ASR_ERROR;
-                        DBG("init_false");
-                    }
-                    break;
-
+            nAsrStatus=LD_ASR_RUNING;
+            if (RunASR()==0)	//	启动一次ASR识别流程：ASR初始化，ASR添加关键词语，启动ASR运算
+            {
+                nAsrStatus = LD_ASR_ERROR;
+                DBG("init_false");
+            }
+            break;
         case LD_ASR_FOUNDOK:
-                             nAsrRes = LD_GetResult( );	//	一次ASR识别流程结束，去取ASR最佳识别结果
-                             DBG("\r\n识别码:");			 /*text.....*/
-                             putchar(nAsrRes+0x30); /*text.....*/
-							mail[i]=0; 
-                            switch(nAsrRes)		   /*对结果执行相关操作,客户修改*/
-                            {
-								
-								//ase CODE_XK:
-								#define clear_mail for(i=0;i<9;i++){mail[i]=0;}
- 
-								case CODE_YMD:
-									DBG("“xiaoxi识别成功\r\n"); 
-                                    clear_mail;	
-                                    mail[1]=1;
-                                    rt_mq_send (mq_commu, mail,9);
-                                    clear_mail;	
-                                    mail[1]=3;
-                                    rt_mq_send (mq_commu, mail,9);
-                                    clear_mail;	
-                                    mail[1]=3;
-                                    mail[3]=38;
-                                    rt_mq_send (mq_commu, mail,9);
-                                    clear_mail;	
+            nAsrRes = LD_ReadReg(0xc5);	//	一次ASR识别流程结束，去取ASR最佳识别结果
+            DBG("\r\n识别码:");			 /*text.....*/
+            putchar(nAsrRes+0x30); /*text.....*/
+            mail[i]=0; 
+            switch(nAsrRes)		   /*对结果执行相关操作,客户修改*/
+            {
+                #define clear_mail for(i=0;i<9;i++){mail[i]=0;}
+                case CODE_YMD:
+                {
+                    DBG("“xiaoxi识别成功\r\n"); 
+                    clear_mail;	
+                    mail[1]=1;
+                    rt_mq_send (mq_commu, mail,9);
+                    clear_mail;	
+                    mail[1]=3;
+                    rt_mq_send (mq_commu, mail,9);
+                    clear_mail;	
+                    mail[1]=3;
+                    mail[3]=38;
+                    rt_mq_send (mq_commu, mail,9);
+                    clear_mail;	
 
-                                    rt_mq_send (mq_commu, mail,9);
+                    rt_mq_send (mq_commu, mail,9);
+                    break;
+                }
+                case CODE_QJ:			/*命令“前进”*/
+                    DBG("“前进”命令识别成功\r\n"); /*text.....*/
+                    mail[0]=11;
+                    mouse_data_clear();
+                    ms_data.z=-3;
+                    (*(mouse_data*)&mail[1])=ms_data;
+                    rt_mq_send (mq_commu, mail,9);
+                break;
+                //case CODE_SK:
+                case CODE_HT:	 /*命令“后退”*/
+                    DBG("“后退”命令识别成功\r\n"); /*text.....*/
+                    mail[0]=11;
+                    mouse_data_clear();
+                    ms_data.z=3;
+                    (*(mouse_data*)&mail[1])=ms_data;
+                    rt_mq_send (mq_commu, mail,9);
+                    // houtui();
+                    break;
+                case CODE_KNM:		/*命令“举手”*/
+                {
+                    DBG("看你妹命令识别成功\r\n"); /*text.....*/
+                    for(i=0;i<9;i++)
+                    {
+                        mail[i]=0;
+                    }	
+                    mail[1]=8;
+                    rt_mq_send (mq_commu, mail,9);
+                    for(i=0;i<9;i++)
+                    {
+                        mail[i]=0;
+                    }	
+                    mail[1]=8;
+                    mail[3]=7;
+                    rt_mq_send (mq_commu, mail,9);
+                    for(i=0;i<9;i++)
+                    {
+                        mail[i]=0;
+                    }	
+                    mail[1]=8;
+                    rt_mq_send (mq_commu, mail,9);
+                    for(i=0;i<9;i++)
+                    {
+                        mail[i]=0;
+                    }	
+                    rt_mq_send (mq_commu, mail,9);
 
-                                    //	Key_LED();								 zarien...
-                                  
-								break;
-                                case CODE_QJ:			/*命令“前进”*/
-                                    DBG("“前进”命令识别成功\r\n"); /*text.....*/
-                                    //	Glide_LED();		//实现流水灯功能	zarien...
-                                    //qianxing();
-									mail[0]=1;
-									mail[1]=0;
-									mail[2]=0;
-									mail[3]=0;
-									mail[4]=252;
-									mail[5]=0;
-									mail[6]=0;
-									mail[7]=0;
-									mail[8]=0;
-									rt_mq_send (mq_commu, mail,9);
-                                    break;
-								//case CODE_SK:
-                                case CODE_HT:	 /*命令“后退”*/
-                                    DBG("“后退”命令识别成功\r\n"); /*text.....*/
-//											Flicker_LED();		//实现灯闪烁功能	  zarien...
-									mail[0]=1;
-									mail[1]=0;
-									mail[2]=0;
-									mail[3]=0;
-									mail[4]=3;
-									mail[5]=0;
-									mail[6]=0;
-									mail[7]=0;
-									mail[8]=0;
-									rt_mq_send (mq_commu, mail,9);
-                                   // houtui();
-                                    break;
+                //	Key_LED();								 zarien...
+                    break;
+                }
+                case CODE_A:
+                {
+                    DBG(toString(CODE_A)"命令识别成功\r\n");
+                    break;
+                }
+                case CODE_B:
+                {
+                    DBG(toString(CODE_B)"命令识别成功\r\n");
+                    break;
+                }
+                case CODE_C:
+                {
+                    DBG(toString(CODE_C)"命令识别成功\r\n");
+                    break;
+                }
+                case CODE_D:
+                {
+                    DBG(toString(CODE_D)"命令识别成功\r\n");
+                    break;
+                }
+                case CODE_E:
+                {
+                    DBG(toString(CODE_E)"命令识别成功\r\n");
+                    break;
+                }
+                case CODE_F:
+                {
+                    DBG(toString(CODE_F)"命令识别成功\r\n");
+                    break;
+                }
+                case CODE_G:
+                {
+                    DBG(toString(CODE_G)"命令识别成功\r\n");
+                    break;
+                }
 
-                                case CODE_KNM:		/*命令“举手”*/
-                                    DBG("kannimei命令识别成功\r\n"); /*text.....*/
-                                    for(i=0;i<9;i++)
-									{
-										mail[i]=0;
-									}	
-									mail[1]=8;
-									rt_mq_send (mq_commu, mail,9);
-									for(i=0;i<9;i++)
-									{
-										mail[i]=0;
-									}	
-									mail[1]=8;
-									mail[3]=7;
-									rt_mq_send (mq_commu, mail,9);
-									for(i=0;i<9;i++)
-									{
-										mail[i]=0;
-									}	
-									mail[1]=8;
-									rt_mq_send (mq_commu, mail,9);
-									for(i=0;i<9;i++)
-									{
-										mail[i]=0;
-									}	
-									rt_mq_send (mq_commu, mail,9);
-
-                                    //	Key_LED();								 zarien...
-                                    break;
-#define toString(a) #a
-								case CODE_A:
-								{
-									DBG(toString(CODE_A)"命令识别成功\r\n");
-									break;
-								}
-								case CODE_B:
-								{
-									DBG(toString(CODE_B)"命令识别成功\r\n");
-									break;
-								}
-								case CODE_C:
-								{
-									DBG(toString(CODE_C)"命令识别成功\r\n");
-									break;
-								}
-								case CODE_D:
-								{
-									DBG(toString(CODE_D)"命令识别成功\r\n");
-									break;
-								}
-								case CODE_E:
-								{
-									DBG(toString(CODE_E)"命令识别成功\r\n");
-									break;
-								}
-								case CODE_F:
-								{
-									DBG(toString(CODE_F)"命令识别成功\r\n");
-									break;
-								}
-								case CODE_G:
-								{
-									DBG(toString(CODE_G)"命令识别成功\r\n");
-									break;
-								}
-							
-                                default:break;
-                            }
-                                nAsrStatus = LD_ASR_NONE;
-                                break;
+                default:break;
+            }
+            nAsrStatus = LD_ASR_NONE;
+            break;
 
         case LD_ASR_FOUNDZERO:
         default:
-                            nAsrStatus = LD_ASR_NONE;
-                            break;
-        }
+            nAsrStatus = LD_ASR_NONE;
+            break;
+    }
     if(nAsrStatus!=LD_ASR_RUNING)
         goto loop;
-    //	else exe_func= free_func;
-
-
-}\
+}
 
 #define PrintCom(A,B) printf(B)
 #define Delay(A) delay_us2(A)
@@ -253,125 +203,38 @@ void delay_ms2(u32 ms);
 void  LD3320_main_Init(void)
 {
 	nAsrStatus=0;
-	LD3320_Init();
+	LD3320_GPIO_Cfg();	
+	LD3320_EXTI_Cfg();
+	LD_reset();
     end_loop=0;
 	LD_reset();
 	LD_reset();
     rt_thread_delay(100);
-	
 	nAsrStatus = LD_ASR_NONE;		//	初始状态：没有在作ASR
-	//printf("LDInit_finished\r\n");
-
     LD_reset();
     rt_thread_delay(60);
-	//sound_play(28);
-//	delay_ms(600);
-//	sound_play(28);
-	//delay_ms(600);
-//	exe_func=body_stop;
-//		sound_play(14);
-//	delay_ms(600);
-//	SPIx_Init();
-//	//while(1);
-//	for(i=0;i<sound[3].lenth;i++)
-//	{
-//		char *temp;
-//		SPI_Flash_Read(temp,i,1);
-//		printf("%d ",*temp);
-//	}
-	
-         
-
-//while(nAsrStatus!=LD_ASR_RUNING)
-
-	
-
-
-
-	
+    
 }
-/***********************************************************
-* 名    称：LD3320_Init(void)
-* 功    能：模块驱动端口初始配置
-* 入口参数：  
-* 出口参数：
-* 说    明：
-* 调用方法： 
-**********************************************************/ 
-void LD3320_Init(void)
-{
-	LD3320_GPIO_Cfg();	
-	LD3320_EXTI_Cfg();
-    //LD3320_Spi_cfg();
-	//LED_gpio_cfg();
-    //sound_Init();
-	LD_reset();
-}
-
-/***********************************************************
-* 名    称： void Delay_( int i)
-* 功    能： 短延时
-* 入口参数：  
-* 出口参数：
-* 说    明：
-* 调用方法： 
-**********************************************************/ 
-void Delay_( int i)
- {     
-    while( i--)
-       {	
-
-        }
- }	
-/***********************************************************
-* 名    称：	LD3320_delay(unsigned long uldata)
-* 功    能：	长延时函数
-* 入口参数：  
-* 出口参数：
-* 说    明：
-* 调用方法： 
-**********************************************************/ 
- void  LD3320_delay(unsigned long uldata)
-{
-	unsigned int j  =  0;
-	unsigned int g  =  0;
-	for (j=0;j<50;j++)
-	{
-		for (g=0;g<uldata;g++)
-		{
-			Delay_(30);
-		}
-	}
-}
-
-/***********************************************************
-* 名    称：	RunASR(void)
-* 功    能：	运行ASR
-* 入口参数：  
-* 出口参数：
-* 说    明：
-* 调用方法： 
-**********************************************************/ 
 uint8 RunASR(void)
 {
 	uint8 i=0;
 	uint8 asrflag=0;
+	delay_ms2(10);
 
-    rt_thread_delay(2);
 	DBG("\r\nstart_init");
 	for (i=0; i<5; i++)			//	防止由于硬件原因导致LD3320芯片工作不正常，所以一共尝试5次启动ASR识别流程
 	{
 		LD_AsrStart();			//初始化ASR
-		rt_thread_delay(3);
+		rt_thread_delay(10);
 		if (LD_AsrAddFixed()==0)	//添加关键词语到LD3320芯片中
 		{
 			DBG("\r\nerror0");
 			LD_reset();			//	LD3320芯片内部出现不正常，立即重启LD3320芯片
-		//	LD3320_delay(10);			//	并从初始化开始重新ASR识别流程
+			rt_thread_delay(10);			//	并从初始化开始重新ASR识别流程
 			continue;
 		}
 
-		LD3320_delay(10);
+		rt_thread_delay(10);
 		
 		if (LD_AsrRun() == 0)
 		{
@@ -407,8 +270,6 @@ void LD3320_GPIO_Cfg(void)
     IOConfig(IOCB,PIN2,fukongshuru);
     IOConfig(IOAB,PIN6,fukongshuru);
     LD_CS_H();
-
-
 }
 /***********************************************************
 * 名    称：LD3320_Spi_cfg(void)
@@ -533,5 +394,333 @@ void EXTI15_10_IRQHandler(void)
 * 说    明：
 * 调用方法： 
 **********************************************************/ 
+#include "LDchip.h"
+#include "Reg_RW.h"
+#include "usart.h"
+#include "debug.h"
+
+uint32 nMp3StartPos=0; //	 zarien...
+uint32 nMp3Size=0;	   //	 zarien...
+uint32 nMp3Pos=0;	   //	 zarien...
+uint32 nCurMp3Pos=0;   //	 zarien...
+
+uint8 nLD_Mode = LD_MODE_IDLE;		//	用来记录当前是在进行ASR识别还是在播放MP3
+
+//********************************************************************************
+uint8 bMp3Play=0;		//	用来记录播放MP3的状态			  zarien...
+//uint8 idata ucRegVal;	 //
+uint8  ucHighInt;	 //
+uint8  ucLowInt;	 //
+uint8  ucStatus;	 //
+uint8  ucSPVol=15; // MAX=15 MIN=0		//	Speaker喇叭输出的音量
+//*********************************************************************************
+uint8 ucRegVal;
+extern uint8  nAsrStatus;
+extern uint8  nDemoFlag;  //zarien...
+extern u8 isplaying;
+
+/***********************************************************
+* 名    称：void LD_reset(void)
+* 功    能：LD芯片硬件初始化
+* 入口参数：  
+* 出口参数：
+* 说    明：
+* 调用方法： 
+**********************************************************/ 
+#define LD_RST_H() IO1(IOCB,PIN3)
+#define LD_RST_L() IO0(IOCB,PIN3)
+void LD_reset(void)
+{
+	LD_RST_H();		//		zarien...
+	rt_thread_delay(2);	//	zarien...
+	LD_RST_L();			//	zarien...
+	rt_thread_delay(2);//		zarien...
+	LD_RST_H();		///		zarien...
+	rt_thread_delay(2);	//	zarien...
+	LD_CS_L();
+	rt_thread_delay(2);
+	LD_CS_H();		
+	rt_thread_delay(2);
+}
+
+/***********************************************************
+* 名    称： void LD_Init_Common(void)
+* 功    能： 初始化命令
+* 入口参数：  
+* 出口参数：
+* 说    明：
+* 调用方法： 
+**********************************************************/ 
+void LD_Init_Common(void)
+{
+
+	LD_ReadReg(0x06);  
+	LD_WriteReg(0x17, 0x35); 
+	rt_thread_delay(5);
+	LD_ReadReg(0x06);  
+
+	LD_WriteReg(0x89, 0x03);  
+	rt_thread_delay(5);
+	LD_WriteReg(0xCF, 0x43);   
+	rt_thread_delay(5);
+	LD_WriteReg(0xCB, 0x02);
+	
+	/*PLL setting*/
+	LD_WriteReg(0x11, LD_PLL_11);       
+	if (nLD_Mode == LD_MODE_MP3)
+	{
+		LD_WriteReg(0x1E, 0x00); 
+		LD_WriteReg(0x19, LD_PLL_MP3_19);   
+		LD_WriteReg(0x1B, LD_PLL_MP3_1B);   
+		LD_WriteReg(0x1D, LD_PLL_MP3_1D);
+	}
+	else
+	{
+		LD_WriteReg(0x1E,0x00);
+		LD_WriteReg(0x19, LD_PLL_ASR_19); 
+		LD_WriteReg(0x1B, LD_PLL_ASR_1B);		
+	    LD_WriteReg(0x1D, LD_PLL_ASR_1D);
+	}
+	rt_thread_delay(5);
+	
+	LD_WriteReg(0xCD, 0x04);
+	LD_WriteReg(0x17, 0x4c); 
+	rt_thread_delay(1);
+	LD_WriteReg(0xB9, 0x00);
+	LD_WriteReg(0xCF, 0x4F); 
+	LD_WriteReg(0x6F, 0xFF); 
+}
+
+void LD_Init_ASR(void)
+{
+	nLD_Mode=LD_MODE_ASR_RUN;
+	LD_Init_Common();
+
+	LD_WriteReg(0xBD, 0x00);
+	LD_WriteReg(0x17, 0x48);	
+	rt_thread_delay( 5 );
+	LD_WriteReg(0x3C, 0x80);    
+	LD_WriteReg(0x3E, 0x07);
+	LD_WriteReg(0x38, 0xff);    
+	LD_WriteReg(0x3A, 0x07);
+	LD_WriteReg(0x40, 0);          
+	LD_WriteReg(0x42, 8);
+	LD_WriteReg(0x44, 0);    
+	LD_WriteReg(0x46, 8); 
+	rt_thread_delay( 1 );
+}
+
+/***********************************************************
+* 名    称：void ProcessInt0(void)
+* 功    能：识别处理函数
+* 入口参数：  
+* 出口参数：
+* 说    明：可以利用查询方式，或中断方式进行调用
+* 调用方法： 
+**********************************************************/ 
+void ProcessInt0(void)
+{
+    uint8 nAsrResCount=0;
+
+    ucRegVal = LD_ReadReg(0x2B);
+
+    // 语音识别产生的中断
+    // （有声音输入，不论识别成功或失败都有中断）
+    if(nLD_Mode == LD_MODE_ASR_RUN)		 //zaien...添加判断条件
+    {
+        LD_WriteReg(0x29,0) ;
+        LD_WriteReg(0x02,0) ;
+        
+        if((ucRegVal & 0x10) && LD_ReadReg(0xb2)==0x21 && LD_ReadReg(0xbf)==0x35)		
+        {	 
+            nAsrResCount = LD_ReadReg(0xba);
+            
+            if(nAsrResCount>0 && nAsrResCount<=4) 
+            {
+                nAsrStatus=LD_ASR_FOUNDOK; 				
+            }
+            else
+            {
+                nAsrStatus=LD_ASR_FOUNDZERO;							
+            }	
+        }
+        else{
+            nAsrStatus=LD_ASR_FOUNDZERO;	//执行没有识别
+        }
+        
+        LD_WriteReg(0x2b, 0);	//中断请求编号=0
+        LD_WriteReg(0x1C,0);/*写0:ADC不可用*/
+        
+        LD_WriteReg(0x29,0) ;	//FIFO，同步中断=0，不允许
+        LD_WriteReg(0x02,0) ;	//FIFO中断允许位=0
+        LD_WriteReg(0x2B,  0);	//中断请求编号=0
+        LD_WriteReg(0xBA, 0);	 //中断辅助=0
+        LD_WriteReg(0xBC,0);	 //ASR,MP3结束控制=0
+        LD_WriteReg(0x08,1);	 /*清除FIFO_DATA*/
+        LD_WriteReg(0x08,0);	/*清除FIFO_DATA后 再次写0*/
+    }
+}
+
+
+uint8 LD_Check_ASRBusyFlag_b2(void)
+{
+	uint8 j;
+	uint8 flag = 0;
+	char mm[2];
+	mm[1]=0;
+	
+	for (j=0; j<10; j++)
+	{
+
+		mm[0]=LD_ReadReg(0xb2);
+
+		//DBG("MM=%d",mm[0]);
+		if (mm[0] == 0x21)
+		{
+			flag = 1;
+			break;
+		}
+		rt_thread_delay(10);		
+	}
+	return flag;
+}
+/***********************************************************
+* 名    称： void LD_AsrStart(void)
+* 功    能：
+* 入口参数：  ASR初始化
+* 出口参数：
+* 说    明：
+* 调用方法： 
+**********************************************************/ 
+void LD_AsrStart(void)
+{
+	LD_Init_ASR();
+}
+/***********************************************************
+* 名    称： uint8 LD_AsrRun(void)
+* 功    能： ASR执行函数
+* 入口参数：  
+* 出口参数：
+* 说    明：
+* 调用方法： 
+**********************************************************/ 
+uint8 LD_AsrRun(void)
+{
+	nAsrStatus=LD_ASR_RUNING;//zarien 12.10
+	LD_WriteReg(0x35, MIC_VOL);
+	LD_WriteReg(0x1C, 0x09);
+	LD_WriteReg(0xBD, 0x20);
+	LD_WriteReg(0x08, 0x01);
+	rt_thread_delay( 5 );
+	LD_WriteReg(0x08, 0x00);
+	rt_thread_delay( 5);
+
+	if(LD_Check_ASRBusyFlag_b2() == 0)
+	{
+		return 0;
+	}
+
+	LD_WriteReg(0xB2, 0xff);	
+	LD_WriteReg(0x37, 0x06);
+	LD_WriteReg(0x37, 0x06);
+	rt_thread_delay( 5);
+	LD_WriteReg(0x1C, 0x0b);
+	LD_WriteReg(0x29, 0x10);
+	
+	LD_WriteReg(0xBD, 0x00);   
+	return 1;
+}
+uint8 LD_AsrAddFixed(void)
+{
+	uint8 k, flag;
+	uint8 nAsrAddLength;
+	#define DATE_A 14       /*数组二维数值*/
+	#define DATE_B 21		/*数组一维数值*/
+	 uint8  sRecog[DATE_A][DATE_B] = {
+	 									"fan ye",\
+										"shang ke",\
+										"kan ni mei",\
+									    "xiao xi",\
+										"pu run te",\
+										"bi li",\
+										"se ba",\
+									    "di ya",\
+										"yi na",\
+										"ai fu",\
+										"ji lo",\
+										"ei chi",\
+										"ai bi",\
+										"zhi mi",\
+//										"kei",\
+//									    "lai ao",\
+//										"ai mu",\
+//										"en",\
+//										"ou",\
+//										"pi",\
+//										"kiu",\
+//										"a",\
+//										"ai si",\
+//										"ti" \
+
+									};	/*添加关键词，用户修改*/
+	 uint8  pCode[DATE_A] = {
+										 CODE_QJ,\
+										 CODE_HT,\
+										 CODE_KNM,\
+										 CODE_YMD,\
+										 CODE_A,\
+										 CODE_B,\
+										 CODE_C,\
+										 CODE_D,\
+										 CODE_E,\
+										 CODE_F,\
+										 CODE_G,\
+										 CODE_H,\
+										 CODE_I,\
+										 CODE_J,\
+//										 CODE_K,\
+//										 CODE_L,\
+//										 CODE_M,\
+//										 CODE_N,\
+//										 CODE_O,\
+//										 CODE_P,\
+//										 CODE_Q,\
+//										 CODE_R,\
+//										 CODE_S,\
+//										 CODE_T \
+										 										 									
+							};	/*添加识别码，用户修改*/
+	flag = 1;
+	for (k=0; k<DATE_A; k++)
+	{			
+		if(LD_Check_ASRBusyFlag_b2() == 0)
+		{
+			flag = 0;
+			break;
+		}
+		
+		LD_WriteReg(0xc1, pCode[k] );
+		LD_WriteReg(0xc3, 0 );
+		LD_WriteReg(0x08, 0x04);
+		rt_thread_delay(1);		  
+		LD_WriteReg(0x08, 0x00);
+		rt_thread_delay(1);		  
+
+		for (nAsrAddLength=0; nAsrAddLength<DATE_B; nAsrAddLength++)
+		{
+			if (sRecog[k][nAsrAddLength] == 0)
+				break;
+			LD_WriteReg(0x5, sRecog[k][nAsrAddLength]);
+		}
+		LD_WriteReg(0xb9, nAsrAddLength);
+		LD_WriteReg(0xb2, 0xff);
+		LD_WriteReg(0x37, 0x04);
+//		LD_WriteReg(0x37, 0x04);	//zarien 12.10
+	}	 
+
+    return flag;
+}
+
+
 
 

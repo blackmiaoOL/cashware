@@ -21,8 +21,6 @@
 //#include "delay.h"
 ////#include "LEDtest.h"
 
-extern void PrintCom(USART_TypeDef* USARTx, uint8_t *Data);
-
 #endif
 
 /*********************************************************************************************************
