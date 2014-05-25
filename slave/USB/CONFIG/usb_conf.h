@@ -35,26 +35,27 @@
 /* buffer table base address */
 /* buffer table base address */
 #define BTABLE_ADDRESS      (0x00)
-
 /* EP0  */
 /* rx/tx buffer base address */
-#define ENDP0_RXADDR        (0x28)
-#define ENDP0_TXADDR        (0x68)
+#define ENDP0_RXADDR        (0x38)
+#define ENDP0_TXADDR        (0x58)
 
 /* EP1  */
 /* tx buffer base address */
-#define ENDP1_TXADDR        (0xA8)
-#define ENDP1_RXADDR		(0xE8)
+#define ENDP1_TXADDR        (0x78)
+#define ENDP1_RXADDR		(ENDP1_TXADDR+0x10)
 /* EP2  */
 /* tx buffer base address */
-#define ENDP2_TXADDR        (0xF8)
-#define ENDP2_RXADDR        (0x108)
+#define ENDP2_TXADDR        (ENDP1_RXADDR+0x10)
+#define ENDP2_RXADDR        (ENDP2_TXADDR+0x10)
 
-#define ENDP3_TXADDR        (0x148)
+#define ENDP3_TXADDR        (ENDP2_RXADDR+0x10)
 
+#define ENDP4_RXADDR        (ENDP3_TXADDR+0x40)
 
-
-#define ENDP4_RXADDR        (0x180)
+#define ENDP5_TXADDR        (ENDP4_RXADDR+0x40)
+#define ENDP6_TXADDR        (ENDP5_TXADDR+0x10)
+#define ENDP7_RXADDR        (ENDP6_TXADDR+0x40)
 /*-------------------------------------------------------------*/
 /* -------------------   ISTR events  -------------------------*/
 /*-------------------------------------------------------------*/
@@ -70,7 +71,7 @@
 //#define  EP2_IN_Callback   NOP_Process
 //#define  EP3_IN_Callback   NOP_Process
 #define  EP4_IN_Callback   NOP_Process
-#define  EP5_IN_Callback   NOP_Process
+//#define  EP5_IN_Callback   NOP_Process
 #define  EP6_IN_Callback   NOP_Process
 #define  EP7_IN_Callback   NOP_Process
 
@@ -80,7 +81,7 @@
 //#define  EP4_OUT_Callback   NOP_Process
 #define  EP5_OUT_Callback   NOP_Process
 #define  EP6_OUT_Callback   NOP_Process
-#define  EP7_OUT_Callback   NOP_Process
+//#define  EP7_OUT_Callback   NOP_Process
 
 #endif /*__USB_CONF_H*/
 

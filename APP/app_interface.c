@@ -207,7 +207,7 @@ bool key_capture(u8 *buf)
     if(hotkey_flag)
     {
 
-        if(buf[2]==hotkey_value)
+        if(buf[2]!=0||buf[0]!=0)
         {
             DBG("I block it!\r\n");
 

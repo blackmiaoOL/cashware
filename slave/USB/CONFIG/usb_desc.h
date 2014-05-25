@@ -36,7 +36,7 @@
 #define KP_OFF_HID_DESC							18
 #define Mouse_OFF_HID_DESC						50
 
-#define JOYSTICK_SIZ_CONFIG_DESC                66+23
+#define JOYSTICK_SIZ_CONFIG_DESC                (66+23)//+58)
 #define KP_ReportDescriptor_Size				63
 #define Mouse_ReportDescriptor_Size				54
 /*********************************************************/
@@ -48,6 +48,21 @@
 #define STANDARD_ENDPOINT_DESC_SIZE             0x09
 
 #define STANDARD_ENDPOINT_DESC_SIZE             0x09
+#define USB_DEVICE_DESCRIPTOR_TYPE              0x01
+#define USB_CONFIGURATION_DESCRIPTOR_TYPE       0x02
+#define USB_STRING_DESCRIPTOR_TYPE              0x03
+#define USB_INTERFACE_DESCRIPTOR_TYPE           0x04
+#define USB_ENDPOINT_DESCRIPTOR_TYPE            0x05
+
+#define VIRTUAL_COM_PORT_DATA_SIZE              64
+#define VIRTUAL_COM_PORT_INT_SIZE               8
+
+#define VIRTUAL_COM_PORT_SIZ_DEVICE_DESC        18
+#define VIRTUAL_COM_PORT_SIZ_CONFIG_DESC        67
+#define VIRTUAL_COM_PORT_SIZ_STRING_LANGID      4
+#define VIRTUAL_COM_PORT_SIZ_STRING_VENDOR      38
+#define VIRTUAL_COM_PORT_SIZ_STRING_PRODUCT     50
+#define VIRTUAL_COM_PORT_SIZ_STRING_SERIAL      26
 
 /* Exported functions ------------------------------------------------------- */
 /*******************************************************************************/

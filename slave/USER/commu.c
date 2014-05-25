@@ -298,7 +298,7 @@ u8 SD_ReadDisk(u8*buf,u32 sector,u8 cnt)		//¶Á¿é
 {
 //	u32 i=0;
 	
-	printf("R%d,%d",sector,cnt);
+//	printf("R%d,%d",sector,cnt);
 	sector_addr=sector;
 	
 	sector_buf=buf;

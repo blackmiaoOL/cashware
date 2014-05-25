@@ -53,7 +53,6 @@ int main(void)
 
 	while(1)
 	{
-
 		if(ptr_write!=ptr_read)
 		{
 			commu_flag=2;
