@@ -191,6 +191,7 @@ bool key_capture(u8 *buf)
     u8 i=0;
     static  u8 hotkey_flag=0;
     static  u8 hotkey_value=0;
+    u8 control_key_this;
     DBG("CNT=%d",key_cap_cnt);
     //    for(i=0;i<8;i++)
     //    {
@@ -204,14 +205,22 @@ bool key_capture(u8 *buf)
     //    }
     //printf("buf[0]_raw=%d\r\n",buf[0]);
     buf[0]=key_process(buf[0]);//TODO
+    control_key_this=buf[0];
     if(hotkey_flag)
     {
 
-        if(buf[2]!=0||buf[0]!=0)
+        if(buf[2]==hotkey_value&&hotkey_flag==1)
         {
             DBG("I block it!\r\n");
-
-            return false;
+            buf[2]=0;
+            buf[0]=0;
+            return true;
+        }
+        else if(buf[0]!=0)
+        {
+            buf[0]=0;
+            hotkey_flag=2;
+            
         }
         else
         {
@@ -230,7 +239,7 @@ bool key_capture(u8 *buf)
             cap_this=cap_this->next;
 
 
-        if(control_key_filt(buf[0],&(cap_this->filter))==0)
+        if(control_key_filt(control_key_this,&(cap_this->filter))==0)
         {
             DBG("(%d----%d)",key_cap_cnt,cap_this->filter.key);
             if( buf[2]==cap_this->filter.key)
