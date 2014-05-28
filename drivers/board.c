@@ -90,6 +90,7 @@ void SysTick_Handler(void)
 void LD3320_GPIO_Cfg(void);
 void delay_ms2(u32 ms);
 void uart_debug_init(void);
+void SPI_Flash_Init(void);
 void rt_hw_board_init()
 {
     NVIC_Configuration();
@@ -99,6 +100,7 @@ void rt_hw_board_init()
     rt_hw_LED_init();
     rt_hw_OLED_init();
     LD3320_GPIO_Cfg();
+    SPI_Flash_Init();
 #ifdef RT_USING_CONSOLE
     rt_console_set_device(CONSOLE_DEVICE);
 #endif

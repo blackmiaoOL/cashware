@@ -1,16 +1,169 @@
-/**
- * @file
- * @brief initialization file read and write API implementation
- * @author Deng Yangjun
- * @date 2007-1-9
- * @version 0.2
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
+#include "stm32f4lib.h"
 #include "inifile.h"
+#define BUF_SIZE 256
+struct ini_oled{
+    int orientation;
+};  
+struct ini_service{
+    bool audio;
+    bool key_remap;
+    bool ahk;
+    bool mouse_gesture;
+    int first_mode;
+    
+};
+
+struct ini_debug{
+    bool usb_init;
+    bool audio;
+    bool mouse;
+    bool keyboard;
+    bool nrf24l01;
+    bool ini;
+    bool key_remap;
+    bool ahk;
+};
+struct ini_top{
+    struct ini_debug Debug;
+    struct ini_service Service;
+    struct ini_oled OLED;
+};
+struct ini_top ini;
+char ini_tmp[BUF_SIZE];
+int ini_read_string(const char *section,const char *key)
+{
+    if(!read_profile_string(section, key, ini_tmp, BUF_SIZE,"true","profile.ini"))
+    {
+        rt_kprintf("read ini file fail\r\n \
+        section:%s \r\n key:%s \r\n in file %s",section,key,"profile.ini");
+        return -1;
+    }
+    else
+    {
+        //rt_kprintf("%s=%s\n",key,ini_tmp);  
+        return 0;
+    }
+}
+
+int ini_read_int(const char *section,const char *key)
+{
+//    static char rec[BUF_SIZE]={0};
+    int value=read_profile_int(section, key,-1,"profile.ini");
+    if(value==-1)
+    {
+        rt_kprintf("read ini file fail\r\n \
+        section:%s \r\n key:%s \r\n in file %s",section,key,"profile.ini");
+        return -1;
+    }
+    else
+    {
+        //rt_kprintf("%s=%s\n",key,rec);  
+        return 0;
+    }
+}
+
+int judge_bool(char *bool_in)
+{
+    u8 i=0;
+    char str_temp[6];
+    for(i=0;i<5;i++)
+    {
+        if(bool_in[i]>='a')
+            str_temp[i]=bool_in[i]-('a'-'A');
+        else
+            str_temp[i]=bool_in[i];
+    }
+    str_temp[5]=0;
+    if(!strcmp("FALSE",str_temp))
+    {
+        return false;
+    }
+    else
+    {
+        str_temp[4]=0;
+        if(!strcmp("TRUE",str_temp))
+            return true;
+    }        
+    return 2;
+}
+int read_bool(bool *variable,const char *section,const char *key)
+{
+    if(!ini_read_string(section,key))    
+    {
+        if((*variable=judge_bool(ini_tmp))==2)       
+        { 
+            if(ini.Debug.ini)
+            rt_kprintf("------------------\r\n\
+section:%s \r\n\
+key:%s \r\n\
+expect bool value (true or false)but get %s\r\n------------------\r\n\
+",section,key,ini_tmp);  
+            return -1; 
+        } 
+        else   
+        {
+            if(ini.Debug.ini)
+            rt_kprintf("%s=%s gotten\r\n",key,ini_tmp); 
+             return 0; 
+        }                    
+    }
+    else
+        return -1;   
+                                
+}
+int read_int(int *variable,const char *section,const char *key)
+{
+    if((*variable=ini_read_int(section,key))==0)    
+    {
+        if(ini.Debug.ini)
+        rt_kprintf("%s=%s gotten\r\n",key,ini_tmp); 
+        return 0;                      
+    }
+    else
+        if(ini.Debug.ini)
+        rt_kprintf("\
+------------------\r\n\
+section:%s \r\n\
+key:%s \r\n\
+expect int value %s\r\n\
+-------------------\r\n\
+",section,key,ini_tmp);  
+            return -1;   
+                                
+}
+int  ini_init()
+{
+#define READ_BOOL(top,section,key) (read_bool(&top.section.key,#section,#key))
+#define READ_INT(top,section,key) (read_int(&top.section.key,#section,#key))
+    ini.Debug.ini=true;
+    READ_BOOL(ini,Debug,ini);  
+    READ_BOOL(ini,Service,audio);
+    READ_BOOL(ini,Service,key_remap);
+    READ_BOOL(ini,Service,ahk);
+    READ_BOOL(ini,Service,mouse_gesture);
+    READ_INT(ini,Service,first_mode);
+    READ_BOOL(ini,Debug,usb_init);
+    READ_BOOL(ini,Debug,audio);
+    READ_BOOL(ini,Debug,mouse);
+    READ_BOOL(ini,Debug,keyboard);
+    READ_BOOL(ini,Debug,nrf24l01);
+    READ_BOOL(ini,Debug,key_remap);
+    READ_BOOL(ini,Debug,ahk);
+    READ_INT(ini,OLED,orientation);
+    
+    return 0;  
+}
+
+
+
+
+
+
+
 
 #define MAX_FILE_SIZE 1024*2
 #define LEFT_BRACE '['

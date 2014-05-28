@@ -2,38 +2,10 @@
 #include "string.h"
 #include "ahk_analyser.h"
 #include "key_remap.h"
-//#include "stm32f4xx.h"
-//#include <board.h>
-//#include <rtthread.h>
-#include "inifile.h"
-#define BUF_SIZE 256
-rt_device_t OLED_dev;
-struct ini_oled{
-    u8 orientation;
-};  
-struct ini_service{
-    bool audio;
-    bool key_remap;
-    bool ahk;
-    bool mouse_gesture;
-    u8 first_mode;
-    
-};
 
-struct ini_debug{
-    bool usb_init;
-    bool audio;
-    bool mouse;
-    bool keyboard;
-    bool nrf24l01;
-    bool ini;
-};
-struct ini_top{
-    struct ini_debug Debug;
-    struct ini_service Service;
-    struct ini_oled OLED;
-};
-struct ini_top ini;
+
+
+rt_device_t OLED_dev;
 extern rt_sem_t sem_flash;
 u8 read_buf[9000];
 u8 buf_out[9];
@@ -69,107 +41,6 @@ const u8 shift_table[]={
     0,0,0,0,    0,0,0,0,    0,0,0,0,    1,0,1,0,
 
 };
-char ini_tmp[BUF_SIZE];
-int ini_read_string(const char *section,const char *key)
-{
-    if(!read_profile_string(section, key, ini_tmp, BUF_SIZE,"true","profile.ini"))
-    {
-        rt_kprintf("read ini file fail\r\n \
-        section:%s \r\n key:%s \r\n in file %s",section,key,"profile.ini");
-        return -1;
-    }
-    else
-    {
-        //rt_kprintf("%s=%s\n",key,ini_tmp);  
-        return 0;
-    }
-}
-
-int ini_read_int(const char *section,const char *key)
-{
-//    static char rec[BUF_SIZE]={0};
-    int value=read_profile_int(section, key,0,"profile.ini");
-    if(!value)
-    {
-        rt_kprintf("read ini file fail\r\n \
-        section:%s \r\n key:%s \r\n in file %s",section,key,"profile.ini");
-        return -1;
-    }
-    else
-    {
-        //rt_kprintf("%s=%s\n",key,rec);  
-        return 0;
-    }
-}
-
-int judge_bool(char *bool_in)
-{
-    u8 i=0;
-    char str_temp[5];
-    for(i=0;i<5;i++)
-    {
-        if(bool_in[i]>='a')
-            str_temp[i]=bool_in[i]-('a'-'A');
-        else
-            str_temp[i]=bool_in[i];
-    }
-    bool_in[5]=0;
-    if(!strcmp(str_temp,"FALSE"))
-    {
-        return false;
-    }
-    else
-    {
-        str_temp[4]=0;
-        if(!strcmp(str_temp,"TRUE"))
-            return true;
-    }        
-    return 2;
-}
-int read_bool(bool *variable,const char *section,const char *key)
-{
-    if(!ini_read_string(section,key))    
-    {
-        if((*variable=judge_bool(ini_tmp))==2)       
-        { 
-            rt_kprintf("-----\r\n                       \
-                        section:%s \r\n                 \
-                        key:%s \r\n                     \
-                        expect bool value but get%s\r\n \
-                        ",section,key,ini_tmp);  
-            return -1; 
-        } 
-        else   
-        {
-            rt_kprintf("%s=%s gotten\r\n",key,ini_tmp); 
-             return 0; 
-        }                    
-    }
-    else
-        return -1;   
-                                
-}
-int  ini_init()
-{
-//    const char *file ="profile.ini";//这里也可以改成“myconfig,txt”
-//    const char *section = "Service";
-//    const char *key = "Name";
-//    
-
-//    while (USART_GetFlagStatus(USART6, USART_FLAG_RXNE) == RESET);
-//        rt_kprintf("fuck\n");  
-//    while(1)
-//    {
-//        rt_thread_delay(2);
-//    }
-
-#define READ_BOOL(top,section,key) (read_bool(&top.section.key,#section,#key))
-    READ_BOOL(ini,Debug,audio);
-    
-    return 0;
-    
-}
-
 
 #define min(a,b) (a>b?b:a)
 void cmd_line(u8* content);
@@ -535,7 +406,7 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.key_exe=blue_set;
     key_cap_add(&cap_this2);
     
-    ini_init();
+    
 }
 
 

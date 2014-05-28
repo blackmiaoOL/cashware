@@ -391,7 +391,7 @@ static void rt_thread_entry_usb(void* parameter)
 {
     rt_device_t LED_dev;
     u8 led_value;
-
+    rt_thread_delay(200);
     LED_dev=rt_device_find("LED");
     //while(1);
     if(LED_dev!=RT_NULL)
@@ -428,13 +428,10 @@ extern  char thread_app_stack[4096];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 //void delay_ms2(u32);
-
+#include "inifile.h"
 int rt_application_init()
 {
-
-
-    SPI_Flash_Init();
-    //delay_ms2(2);
+    ini_init();
     rt_thread_init(&thread_usb,
                    "thread_usb",
                    rt_thread_entry_usb,
