@@ -423,7 +423,7 @@ u8 mode_line_process(u8* read_buf,u32 ptr[2])
                 block.filter.control_filter[block.filter.control_filter_cnt++]=
                         control_key_decode(token_this->content)|
                         (control_key_decode(token_this->content)<<4);
-                DBG("block_raw\r\n");
+                //DBG("block_raw\r\n");
                 block.state=contrl_key_gotton;
             }
             else if(class_this==token_dir_ctrl)
@@ -732,42 +732,8 @@ void key_cap_Init()
     }
     key_cap_free[key_cap_cnt-1].next=RT_NULL;
 }
-u8 my_id[]="qk333333";
-u8 my_mail[]="qk333student@sogou.com";
-u8 my_nickname[]="blackmiaool";
 
 
-//void my_id_Init()
-//{
-//    cap cap_my_id={LShift,
-//                   0,
-//                   press_string,
-//                   RT_NULL,
-//                   my_id,
-//                   sizeof(my_id)};
-//    cap cap_my_id2={LShift,
-//                    0,
-//                    press_string,
-//                    RT_NULL,
-//                    my_mail,
-//                    sizeof(my_mail)};
-//    cap cap_my_id3={LShift,
-//                    0,
-//                    press_string,
-//                    RT_NULL,
-//                    my_nickname,
-//                    sizeof(my_nickname)};
-
-//    cap_my_id.char_key=ascii2usb['a'];
-//    key_cap_add(&cap_my_id);
-
-
-//    cap_my_id2.char_key=ascii2usb['b'];
-//    key_cap_add(&cap_my_id2);
-
-//    cap_my_id3.char_key=ascii2usb['c'];
-//    key_cap_add(&cap_my_id3);
-//}
 //buf 0~7:USBcode 8:if press LShift 9:control_key add 10:control_key del
 void press_string_pure(u16 *buf,u32 lenth)
 {

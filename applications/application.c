@@ -160,9 +160,9 @@ static void rt_thread_entry_commu(void* parameter)
         {
         case 0://keyborad send with cap
         {
-        	u8 i=0;
-			for(i=0;i<9;i++)	
-            DBG("i=%dmail=%d\r\n",i,mail[i]);
+//        	u8 i=0;
+//			for(i=0;i<9;i++)	
+//            DBG("i=%dmail=%d\r\n",i,mail[i]);
             if(key_capture(mail+1))
             {
                 mail[8]=92;
@@ -187,7 +187,7 @@ static void rt_thread_entry_commu(void* parameter)
 //			for(i=0;i<9;i++)	
 //               DBG("i=%dmail=%d\r\n",i,mail[i]);
             mail[8]=90;
-            if((mail[2]==124||mail[4]==240)&&mail[6]==255)
+            if((mail[3]==124||mail[5]==240)&&mail[7]==255)
             {
                 DBG("mouse error");
                 goto mouseend;
@@ -218,13 +218,14 @@ static void rt_thread_entry_commu(void* parameter)
             {
                 if(mouse_capture(mail+1))
                 {
-                    mouse_code((mail+1));
+                    
                     if(blue_choose)
                     {     
                         commu_blue_send(mail,9);
                     }
                     else
                     {
+                        mouse_code((mail+1));
                         commu_send(mail,9); 
                     }
                 }
@@ -310,9 +311,9 @@ static char thread_ld3320_stack[4096];
 struct rt_thread thread_ld3320;
 static void rt_thread_entry_ld3320(void* parameter)
 {
-	DBG("Init_start\r\n");
+	DBG("LD3320 Init_start\r\n");
     LD3320_main_Init();
-	DBG("Init_end\r\n");
+	DBG("LD3320 Init_end\r\n");
 	LD_loop();
     while(1)
     {
@@ -423,10 +424,11 @@ static void rt_thread_entry_usb(void* parameter)
         rt_thread_delay(1);       
 	} 
 }
-extern  char thread_app_stack[1024];
+extern  char thread_app_stack[4096];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 //void delay_ms2(u32);
+
 int rt_application_init()
 {
 
@@ -474,11 +476,8 @@ int rt_application_init()
                    &thread_ld3320_stack[0],
             sizeof(thread_ld3320_stack),12,5);
     rt_thread_startup(&thread_ld3320);
-
-    {
-        extern void Jacob_appinit();
-        Jacob_appinit();
-    }
+        
+  //  Jacob_appinit();
 
     mq_commu=rt_mq_create ("mq_commu", 9, 500, RT_IPC_FLAG_FIFO);
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
