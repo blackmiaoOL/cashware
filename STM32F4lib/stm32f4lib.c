@@ -152,8 +152,18 @@ EXTI15_10_IRQChannel
 EXTI0_IRQHandler
 */
 //EXTI->PR=9<<0;
-
-
+void no_use_printf(char *shuru,...)
+{
+// char a;
+// a=*shuru;
+// a=a;
+}
+void no_use_putchar(char data)
+{
+// char a;
+// a=*shuru;
+// a=a;
+}
 void mprintf(char *shuru,...)
 {
     int i=0;

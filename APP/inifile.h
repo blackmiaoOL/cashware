@@ -16,11 +16,38 @@
 
 #include "ff.h"
 #include "rtthread.h"
-
+#include "stm32f4lib.h"
 int read_profile_string( const char *section, const char *key,char *value, int size,const char *default_value,const char *file_name);
 int read_profile_int( const char *section, const char *key,int default_value,const char *file_name);
 int write_profile_string( const char *section, const char *key,const char *value,const char *file_name);
 int  ini_init(void);
+struct ini_oled{
+    int orientation;
+};  
+struct ini_service{
+    bool audio;
+    bool key_remap;
+    bool ahk;
+    bool mouse_gesture;
+    int first_mode;
+    
+};
 
+struct ini_debug{
+    bool usb_init;
+    bool audio;
+    bool mouse;
+    bool keyboard;
+    bool nrf24l01;
+    bool ini;
+    bool key_remap;
+    bool ahk;
+};
+struct ini_top{
+    struct ini_debug Debug;
+    struct ini_service Service;
+    struct ini_oled OLED;
+};
+extern struct ini_top ini;
 
 #endif //end of INI_FILE_H_

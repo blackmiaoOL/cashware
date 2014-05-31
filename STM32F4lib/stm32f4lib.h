@@ -49,6 +49,8 @@ __inline void IOset(GPIO_TypeDef *IOBase,uint16_t PIN,bool value)
 {
    value?IO1(IOBase,PIN):IO0(IOBase,PIN);
 }
+void no_use_printf(char *shuru,...);
+void no_use_putchar(char data);
 /////////////外设地址定义，第二位是1，则RCC->APB2ENR2，以此类推//////////////////
 #define abs(signed_data) (((signed_data)>0)?(signed_data):(-(signed_data)))
 #define ptr2bit(ptr,bit) (((u8 *)ptr)[bit/8]&(1<<(bit%8)))

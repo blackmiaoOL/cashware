@@ -1,6 +1,8 @@
 #include "commu.h"
 #include "debug.h"
 #include "rtthread.h"
+#include "app_interface.h"
+#include "mouse_gesture.h"
 //PIN0~PIN7:info
 //PIN8:CLK
 //PIN9:endflag(high enable)
@@ -9,9 +11,175 @@
 //#define END_H IO1(IOEB,PIN13)
 //#define END_L IO0(IOEB,PIN13)
 //#define DATA_SET(a) do{GPIOE->ODR&=0XFC03;GPIOE->ODR|=((((u16)a)<<2)&0X3fc);}while(0)
+rt_mq_t mq_commu;
+rt_sem_t sem_commu;
+rt_sem_t sem_app_init;
+extern  u32 flash_addr;
+extern u8 blue_choose;
+void commu_blue_send(u8* buf,u32 lenth);
+void key_cap_Init(void);
+bool key_capture(u8 *buf);
+extern rt_mq_t mq_commu;
+void blue_tooth_Init(void);
+ALIGN(RT_ALIGN_SIZE)
+char thread_commu_stack[1024];
+struct rt_thread thread_commu;
+extern u8 flash_buf[512];
+void rt_thread_entry_commu(void* parameter)
+{
+    u8 mail[9];
+
+    rt_sem_take(sem_app_init,RT_WAITING_FOREVER);
+    while(1)
+    {
+        rt_mq_recv (mq_commu, mail,9, RT_WAITING_FOREVER);
+        switch(mail[0])
+        {
+        case 0://keyborad send with cap
+        {
+//        	u8 i=0;
+//			for(i=0;i<9;i++)	
+//            DBG("i=%dmail=%d\r\n",i,mail[i]);
+            if(key_capture(mail+1))
+            {
+                mail[8]=92;
+                if(blue_choose)
+                {
+                    mail[0]=6;
+                    commu_blue_send(mail,9);
+                }
+                
+                else
+                {
+                   commu_send(mail,9); 
+                }
+            }
+            break;
+        }
+        case 1://mouse 
+        {
+
+            static u8 release_flag=0;
+//            u8 i=0;
+//			for(i=0;i<9;i++)	
+//               DBG("i=%dmail=%d\r\n",i,mail[i]);
+            mail[8]=90;
+            if((mail[3]==124||mail[5]==240)&&mail[7]==255)
+            {
+                DBG("mouse error");
+                goto mouseend;
+            }
+            if(mail[1]==6)
+            {
+                mail[1]=1;
+                commu_blue_send(mail,9);
+                commu_send(mail,9); 
+                blue_choose=1-blue_choose;
+                
+                if(blue_choose)
+                    cmd("Blue remote");
+                else
+                {
+                    cmd("Blue closed");
+                }
+                release_flag=1;
+            }
+            else if(release_flag)
+            {
+                if(mail[1]==0)
+                {
+                    release_flag=0;
+                }   
+            }
+            else
+            {
+                if(mouse_capture(mail+1))
+                {
+                    
+                    if(blue_choose)
+                    {     
+                        commu_blue_send(mail,9);
+                    }
+                    else
+                    {
+                        mouse_code((mail+1));
+                        commu_send(mail,9); 
+                    }
+                }
+            }
+            mouseend:
+            
+            break;
+        }
+        case 3://read flash addr
+        {
+            u8 buf[4];
+            commu_recv(buf,4);
+            flash_addr=*((u32*)buf);
+            rt_sem_release(sem_commu);
+            break;
+        }
+        case 4://send flash content
+        {
+            commu_send(flash_buf,512);
+            rt_sem_release(sem_commu);
+            break;
+        }
+        case 5://receive flash content 
+        {
+            commu_recv(flash_buf,512);
+            rt_sem_release(sem_commu);
+            break;
+        }
+        case 6://keyborad send immediately
+        {
+            mail[8]=92;
+            if(blue_choose)
+            {
+                mail[0]=6;
+                commu_blue_send(mail,9);
+            }
+            else
+            {
+                mail[0]=0;
+               commu_send(mail,9); 
+            }
+            rt_thread_delay(10);
+            break;
+        }
+        case 10:
+        {
+            mail[8]=92;
+            mail[0]=6;
+            commu_blue_send(mail,9);
+            mail[0]=0;
+            commu_send(mail,9);
+            rt_thread_delay(10);  
+            break;
+        }
+        case 11://mouse direct
+        {
+//            u8 i=0;
+//			for(i=0;i<9;i++)	
+//               DBG("i=%dmail=%d\r\n",i,mail[i]);
+            mail[0]=1;
+            mouse_code((mail+1));
+            if(blue_choose)
+            {     
+                commu_blue_send(mail,9);
+            }
+            else
+            {
+                commu_send(mail,9); 
+            }
+            break;
+        }
+        }
+        rt_thread_delay(1);
+    }
 
 
-
+}
 
 u8 commu_send_byte(u8 info);
 

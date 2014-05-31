@@ -16,7 +16,7 @@ void table_line_process(u8* read_buf,u32* token_ptr)
 
         }
         index_left=i;
-        DBG("find_index=%d\r\n",index_left);
+        //DBG("find_index=%d\r\n",index_left);
         break;
 fail:;
     }
@@ -33,13 +33,42 @@ fail:;
 
         }
         index_right=i;
-        printf("find_index2=%d\r\n",index_right);
+        //printf("find_index2=%d\r\n",index_right);
         break;
 fail2:;
     }
     key_changetable[index_left]=index_right;
 
 
+}
+u8 key_remap_init()
+{
+     FIL file;
+     u32 cnt=0;
+     u32 i=0;
+    #define key_remap_print(arg...) {do{if(ini.Debug.key_remap){DBG(arg);}else{ no_use_printf(arg);}}while(0);}
+    #define key_remap_putchar(arg) {do{if(ini.Debug.key_remap){putchar(arg);}else{no_use_putchar(arg);}}while(0);}
+    if(ini.Service.key_remap)    
+    {
+   
+        printf("open:%d",f_open(&file,"/key_t",FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN));
+        printf("read:%d",f_read(&file,read_buf,file.fsize,&cnt));
+        printf("size=%d\r\n",file.fsize);
+        for(i=0;i<file.fsize;i++)
+        {
+        key_remap_putchar(read_buf[i]);
+        }
+        f_close(&file);
+        if(key_table_process(read_buf,file.fsize))
+        {
+                cmd("Key table error");
+        }
+        else
+        {
+                cmd("Key table done");
+        }
+    }    
+    return 0;
 }
 u8 key_table_process(u8* read_buf,u32 size)
 {
@@ -61,7 +90,7 @@ u8 key_table_process(u8* read_buf,u32 size)
         }
         else
         {
-
+            
         }
     }
     for(i=0;i<write_cnt;i++)

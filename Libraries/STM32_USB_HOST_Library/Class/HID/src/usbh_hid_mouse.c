@@ -170,6 +170,17 @@ static void  MOUSE_Decode(uint8_t *data)
   USR_MOUSE_ProcessData(&HID_MOUSE_Data);
 
 }
+void mouse_code(u8 * mouse_data)
+{
+    mouse_data[0]=mouse_data[0];
+    mouse_data[1]=mouse_data[2];
+    mouse_data[2]=mouse_data[4];
+    mouse_data[3]=mouse_data[6];
+    mouse_data[4]=0;
+    mouse_data[5]=0;
+    mouse_data[6]=0;
+    mouse_data[7]=90;
+}
 /**
   * @}
   */ 

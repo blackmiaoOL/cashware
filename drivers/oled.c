@@ -1,8 +1,7 @@
 #include "oled.h"
+#include "debug.h"
 
 
-#define MCU_this STM32F4
-#if MCU_this==STM32F4
 #define OLED_DC_H       IO1(base[0],PIN[0])
 #define OLED_DC_L       IO0(base[0],PIN[0])
 #define OLED_CS_H       IO1(base[1],PIN[1]);
@@ -19,16 +18,34 @@
 static u16 clk[5]={PERIOA,PERIOA,PERIOA,PERIOA,PERIOA};//DC CS MOSI SCK RST
 static GPIO_TypeDef* base[5]={IOAB,IOAB,IOAB,IOAB,IOAB};
 static u32 PIN[5]={PIN3,PIN4,PIN7,PIN5,PIN2};
-#endif
 typedef  unsigned char byte;
 static void OLED_Init(void);
-//static void OLED_CLS(void);
-static void OLED_Clear(void);
+static void OLED_CLS(void);
+static void OLED_Flush(void);
+static u8 OLED_mode;
+#include "OLED12864.h"
+#include "ziku.h"
+
+
+#define X_WIDTH 128
+#define Y_WIDTH 64
+#define XLevelL		0x00
+#define XLevelH		0x10
+#define XLevel		((XLevelH&0x0F)*16+XLevelL)
+#define Max_Column	128
+#define Max_Row		64
+#define	Brightness	0xCF
+static u8 OLED_buf[8][128];
+static void OLED_WrCmd(unsigned char cmd);
+static void OLED_WrDat(unsigned char dat);
+static void OLED_Set_Pos(unsigned char x, unsigned char y);
+static void OLED_IO_Init(void);
+
+
 //static void OLED_write_char(u8 x,u8 y,char aa);
 //static void OLED_P6x8Str(byte x,byte y,const byte ch[]);
 static void OLED_P8x16Str(byte x,byte y,byte ch[]);
 //static void OLED_P14x16Ch(byte x,byte y,byte N);
-static void OLED_Fill(byte dat);
 //static void OLED_DrawPoint(u8 x,u8 y);
 //static void  OLED_ShowNum(u16 x,u16 y,long num,u8 len);
 static void delay_ms2(u32 ms)
@@ -81,21 +98,59 @@ static rt_size_t rt_OLED_read (rt_device_t dev, rt_off_t pos,
 static rt_size_t rt_OLED_write (rt_device_t dev, rt_off_t pos,
                                 const void* buffer, rt_size_t size)
 {
-    rt_uint8_t* ptr;
-    rt_err_t err_code;
-//    rt_uint16_t i=0;
-    RT_ASSERT(dev != RT_NULL);
-    err_code = RT_EOK;
+    u16 i=0;
+    
+    switch(OLED_mode)
+    {
+    case 0:{
+        OLED_P8x16Str((pos>>8)<<3,pos&0xff,( u8*)buffer);
+        break;
+    }
+    case 2:
+    case 1:{
+        u8 y_offset=0;
+        u8 x_offset=0;
+        u8 *data_ptr;
+        x_offset=pos%128;//0~127
+        
+        y_offset=pos>>7;//0~63
+        //DBG("---write:%d,%d,%d&",x_offset,y_offset,size);
 
-    OLED_P8x16Str((pos>>8)<<3,pos&0xff,( u8*)buffer);
+        for(i=0;i<size;i++)
+        {
+            if(x_offset+i<127)
+            {
+                data_ptr=&(OLED_buf[y_offset>>3][x_offset+i]);
+                if(OLED_mode==1)
+                if(!(((u8*)buffer)[(i)/8]&(1<<(7-(i)%8))))
+                {
+                    *data_ptr|=(1<<((y_offset)%8));
+                }
+                else
+                {
+                    *data_ptr&=~(1<<((y_offset)%8));
+                }
+                else
+                {
+                    if((((u8*)buffer)[(i)/8]&(1<<(7-(i)%8))))
+                    {
+                        *data_ptr|=(1<<((y_offset)%8));
+                    }
+                    else
+                    {
+                        *data_ptr&=~(1<<((y_offset)%8));
+                    }
+                }
+            }
+            
+            //DBG("%d",!(((u8*)buffer)[(i)/8]&(1<<((i)%8))));
+        }
+           
+        break;
+    }
+    }
 
-    //IOset(IODB,info->PIN[i],(*(u8 *)buffer)&1);
-
-    /* ?ии???ик?ио?? */
-    rt_set_errno(err_code);
-
-    /* бд?????????????б┴????? */
-    return (rt_uint32_t)ptr - (rt_uint32_t)buffer;
+    return size;
 }
 
 
@@ -103,20 +158,35 @@ static rt_size_t rt_OLED_write (rt_device_t dev, rt_off_t pos,
 static rt_err_t rt_OLED_control (rt_device_t dev,
                                  rt_uint8_t cmd, void *args)
 {
+    //DBG("---control:%d&",cmd);
     RT_ASSERT(dev != RT_NULL);
 	switch(cmd)
 	{
 	case 0:
 	{
-		OLED_Clear();
+		OLED_CLS();
 		break;
 	}
 	case 1:
 	{
-		
+		OLED_Flush();
 		break;
 	}
-	
+    case 2:
+    {
+        OLED_mode=0;
+        break;
+    }
+    case 3:
+    {
+        OLED_mode=1;
+        break;
+    }
+    case 4:
+    {
+        OLED_mode=2;
+        break;
+    }
 	}
     return RT_EOK;
 }
@@ -197,23 +267,6 @@ static void delay_us2(u16 us)
 
 
 
-#include "OLED12864.h"
-#include "ziku.h"
-
-
-#define X_WIDTH 128
-#define Y_WIDTH 64
-#define XLevelL		0x00
-#define XLevelH		0x10
-#define XLevel		((XLevelH&0x0F)*16+XLevelL)
-#define Max_Column	128
-#define Max_Row		64
-#define	Brightness	0xCF
-//static u8 OLED_buf[8][128];
-static void OLED_WrCmd(unsigned char cmd);
-static void OLED_WrDat(unsigned char dat);
-static void OLED_Set_Pos(unsigned char x, unsigned char y);
-static void OLED_IO_Init(void);
 
 
 /***************transplant*****************/
@@ -337,20 +390,16 @@ void OLED_WrCmd(unsigned char cmd)
 {
     unsigned char i=8;
     OLED_CS_L;
-    //OLED_CS=0;;
     OLED_DC_L;
 
     OLED_SCK_L;
     //;;
     while(i--)
     {
-        // if(cmd&0x80){OLED_MOSI_H;}
-        //else{OLED_MOSI_L;}
         (cmd&0x80)?OLED_MOSI_H:OLED_MOSI_L;
         OLED_SCK_H;
         OLED_SCK_L;
         cmd<<=1;
-  //      delay_short;
     }
     OLED_CS_H;
 }
@@ -360,7 +409,7 @@ void OLED_Set_Pos(unsigned char x, unsigned char y)
     OLED_WrCmd(((x&0xf0)>>4)|0x10);
     OLED_WrCmd((x&0x0f)|0x01);
 }
-void OLED_Fill(unsigned char bmp_dat)
+void OLED_Flush()
 {
     unsigned char y,x;
 
@@ -370,27 +419,28 @@ void OLED_Fill(unsigned char bmp_dat)
         OLED_WrCmd(0x01);
         OLED_WrCmd(0x10);
         for(x=0;x<X_WIDTH;x++)
-        {	OLED_WrDat(bmp_dat);}
+        {	OLED_WrDat(OLED_buf[y][x]);}
     }
 }
-//void OLED_CLS(void)
-//{
-//    unsigned char y,x;
-//    for(y=0;y<8;y++)
-//    {
-//        OLED_WrCmd(0xb0+y);
-//        OLED_WrCmd(0x01);
-//        OLED_WrCmd(0x10);
-//        for(x=0;x<X_WIDTH;x++)
-//            OLED_WrDat(0);
-//    }
-//}
-
-
-void OLED_Clear()
+void OLED_CLS()
 {
-    OLED_Fill(0x00);
+    unsigned char y,x;
+    for(y=0;y<8;y++)
+    {
+        OLED_WrCmd(0xb0+y);
+        OLED_WrCmd(0x01);
+        OLED_WrCmd(0x10);
+        for(x=0;x<X_WIDTH;x++)
+            OLED_WrDat(0);
+    }
+
+    for(x=0;x<8;x++)
+    {
+        for(y=0;y<128;y++)
+            OLED_buf[x][y]=0;
+    }
 }
+
 
 
 //==============================================================

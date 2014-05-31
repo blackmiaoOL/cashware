@@ -2820,7 +2820,14 @@ FRESULT f_sync (
 /*-----------------------------------------------------------------------*/
 /* Close File                                                            */
 /*-----------------------------------------------------------------------*/
-
+WCHAR ff_convert (WCHAR chr, UINT dir)
+{
+    return chr;
+}
+WCHAR ff_wtoupper (WCHAR chr)
+{
+    return chr;
+}
 FRESULT f_close (
 	FIL *fp		/* Pointer to the file object to be closed */
 )

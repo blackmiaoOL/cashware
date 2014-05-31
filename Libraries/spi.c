@@ -24,14 +24,12 @@ void SPI2_Init(void)
  	GPIO_InitTypeDef GPIO_InitStructure;
   	SPI_InitTypeDef  SPI_InitStructure;
 
-	//RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOB, ENABLE );//PORTB???? 
-	//RCC_APB1PeriphClockCmd(	RCC_APB1Periph_SPI2,  ENABLE );//SPI2???? 	
 	SCPE(PERSPI2);
 	SCPE(PERIOB);
     GPIO_PinAFConfig(IOBB, 13, GPIO_AF_SPI2);
-   GPIO_PinAFConfig(IOBB, 14, GPIO_AF_SPI2);
-   GPIO_PinAFConfig(IOBB, 15, GPIO_AF_SPI2);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+    GPIO_PinAFConfig(IOBB, 14, GPIO_AF_SPI2);
+    GPIO_PinAFConfig(IOBB, 15, GPIO_AF_SPI2);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;  //PB13/14/15?????? 
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd =GPIO_PuPd_UP;
@@ -52,9 +50,6 @@ void SPI2_Init(void)
 	SPI_Init(SPI2, &SPI_InitStructure);  //??SPI_InitStruct???????????SPIx???
  
 	SPI_Cmd(SPI2, ENABLE); //??SPI??
-
-	//SPI2_ReadWriteByte(0xff);//????		 
- 
 
 }   
 //SPI ??????

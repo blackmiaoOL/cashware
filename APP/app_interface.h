@@ -4,12 +4,15 @@
 #include "debug.h"
 #include "rtthread.h"
 #include "ff.h"
+#include "inifile.h"
 bool key_capture(u8 *buf);
 void key_cap_Init(void);
 void press_string_pure(u16 *buf,u32 lenth);
 s8 control_key_index(const char buf[]);
 extern const u8  ascii2usb[128];
 extern rt_mq_t mq_commu;
+extern rt_sem_t sem_flash;
+extern rt_sem_t sem_app_init;
 extern u8 blue_choose;
 #define LCtrl       0x1
 #define LShift     0x2
@@ -25,7 +28,7 @@ extern u8 blue_choose;
 extern const u8 shift_table[128];
 void cmd(u8* content);
 extern 	rt_device_t OLED_dev;
-
+extern u8 read_buf[9000];
 typedef struct block_information block_info;
 struct control_key_filter
 {

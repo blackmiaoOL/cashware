@@ -32,14 +32,17 @@
 #include "commu.h"
 #include "w25q16.h"
 #include "mouse_gesture.h"
+#include "inifile.h"
+#include "key_remap.h"
 volatile u32 flash_addr;
 u8 flash_buf[512];
 void cmd(u8* content);
 void commu_blue_send(u8* buf,u32 lenth);
 void delay_ms2(u32 ms);
-
-rt_mq_t mq_commu;
-rt_sem_t sem_commu;
+extern rt_mq_t mq_commu;
+//rt_mq_t mq_commu;
+extern rt_sem_t sem_commu;
+extern rt_sem_t sem_app_init;
 rt_sem_t sem_ld3320;
 rt_sem_t sem_flash;
 //   rt_mailbox_t mb_commu;
@@ -132,177 +135,8 @@ void blue_tooth_Init()
 }
 #include "usbh_hid_mouse.h"
 u8 blue_choose=0;
-ALIGN(RT_ALIGN_SIZE)
-static char thread_commu_stack[1024];
-struct rt_thread thread_commu;
-void mouse_code(u8 * mouse_data)
-{
-    mouse_data[0]=mouse_data[0];
-    mouse_data[1]=mouse_data[2];
-    mouse_data[2]=mouse_data[4];
-    mouse_data[3]=mouse_data[6];
-    mouse_data[4]=0;
-    mouse_data[5]=0;
-    mouse_data[6]=0;
-    mouse_data[7]=90;
-}
-static void rt_thread_entry_commu(void* parameter)
-{
-    //u32 *s;
-    u8 mail[9];
-    blue_tooth_Init();
-    key_cap_Init();
-    commu_Init();
-    while(1)
-    {
-        rt_mq_recv (mq_commu, mail,9, RT_WAITING_FOREVER);
-        switch(mail[0])
-        {
-        case 0://keyborad send with cap
-        {
-//        	u8 i=0;
-//			for(i=0;i<9;i++)	
-//            DBG("i=%dmail=%d\r\n",i,mail[i]);
-            if(key_capture(mail+1))
-            {
-                mail[8]=92;
-                if(blue_choose)
-                {
-                    mail[0]=6;
-                    commu_blue_send(mail,9);
-                }
-                
-                else
-                {
-                   commu_send(mail,9); 
-                }
-            }
-            break;
-        }
-        case 1://mouse 
-        {
-
-            static u8 release_flag=0;
-//            u8 i=0;
-//			for(i=0;i<9;i++)	
-//               DBG("i=%dmail=%d\r\n",i,mail[i]);
-            mail[8]=90;
-            if((mail[3]==124||mail[5]==240)&&mail[7]==255)
-            {
-                DBG("mouse error");
-                goto mouseend;
-            }
-            if(mail[1]==6)
-            {
-                mail[1]=1;
-                commu_blue_send(mail,9);
-                commu_send(mail,9); 
-                blue_choose=1-blue_choose;
-                
-                if(blue_choose)
-                    cmd("Blue remote");
-                else
-                {
-                    cmd("Blue closed");
-                }
-                release_flag=1;
-            }
-            else if(release_flag)
-            {
-                if(mail[1]==0)
-                {
-                    release_flag=0;
-                }   
-            }
-            else
-            {
-                if(mouse_capture(mail+1))
-                {
-                    
-                    if(blue_choose)
-                    {     
-                        commu_blue_send(mail,9);
-                    }
-                    else
-                    {
-                        mouse_code((mail+1));
-                        commu_send(mail,9); 
-                    }
-                }
-            }
-            mouseend:
-            
-            break;
-        }
-        case 3://read flash addr
-        {
-            u8 buf[4];
-            commu_recv(buf,4);
-            flash_addr=*((u32*)buf);
-            rt_sem_release(sem_commu);
-            break;
-        }
-        case 4://send flash content
-        {
-            commu_send(flash_buf,512);
-            rt_sem_release(sem_commu);
-            break;
-        }
-        case 5://receive flash content 
-        {
-            commu_recv(flash_buf,512);
-            rt_sem_release(sem_commu);
-            break;
-        }
-        case 6://keyborad send immediately
-        {
-            mail[8]=92;
-            if(blue_choose)
-            {
-                mail[0]=6;
-                commu_blue_send(mail,9);
-            }
-            else
-            {
-                mail[0]=0;
-               commu_send(mail,9); 
-            }
-            rt_thread_delay(10);
-            break;
-        }
-        case 10:
-        {
-            mail[8]=92;
-            mail[0]=6;
-            commu_blue_send(mail,9);
-            mail[0]=0;
-            commu_send(mail,9);
-            rt_thread_delay(10);  
-            break;
-        }
-        case 11://mouse direct
-        {
-//            u8 i=0;
-//			for(i=0;i<9;i++)	
-//               DBG("i=%dmail=%d\r\n",i,mail[i]);
-            mail[0]=1;
-            mouse_code((mail+1));
-            if(blue_choose)
-            {     
-                commu_blue_send(mail,9);
-            }
-            else
-            {
-                commu_send(mail,9); 
-            }
-            break;
-        }
-        }
-        rt_thread_delay(1);
-    }
 
 
-}
 void LD3320_main_Init(void);
 void ProcessInt0(void );
 void LD_loop(void);
@@ -389,28 +223,9 @@ extern uint8_t err_flag;
 extern char debug_en;
 static void rt_thread_entry_usb(void* parameter)
 {
-    rt_device_t LED_dev;
-    u8 led_value;
-    rt_thread_delay(200);
-    LED_dev=rt_device_find("LED");
-    //while(1);
-    if(LED_dev!=RT_NULL)
-    {
-        rt_kprintf("LED dev found\n\r");
-        rt_device_write(LED_dev,0,&led_value,1);
-        led_value++;
-    }
-
-    rt_device_open(LED_dev,RT_DEVICE_FLAG_ACTIVATED);
-
-    DBG ("System Initializing...\n");
     #ifndef DEBUG
     #define DEBUG
     #endif
-    debug_en=1;
-
-    /* Init Host Library */
-
     USBH_Init(&USB_OTG_Core_dev,//hardware reg&info
               USB_OTG_FS_CORE_ID,		//use FS not HS(enum)
               &USB_Host,//USB state
@@ -427,11 +242,66 @@ static void rt_thread_entry_usb(void* parameter)
 extern  char thread_app_stack[4096];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
-//void delay_ms2(u32);
-#include "inifile.h"
+
+
+FATFS fs;
+ALIGN(RT_ALIGN_SIZE)
+char thread_init_stack[7024];
+struct rt_thread thread_init;
+void rt_thread_entry_init(void* parameter)
+{
+    rt_device_t LED_dev;
+    u8 led_value;
+    u8 i;
+    printf("-----%d------",f_mount(&fs,"/",1));
+    ini_init();
+    key_cap_Init();
+    blue_tooth_Init();
+    commu_Init();
+    OLED_dev=rt_device_find("OLED");
+    if(OLED_dev!=RT_NULL)
+    {
+        rt_kprintf("OLED dev found\n\r");
+    }  
+	rt_device_open(OLED_dev,RT_DEVICE_FLAG_ACTIVATED);
+    
+    
+    LED_dev=rt_device_find("LED");
+    rt_device_open(LED_dev,RT_DEVICE_FLAG_ACTIVATED);
+    if(LED_dev!=RT_NULL)
+    {
+        rt_kprintf("LED dev found\n\r");
+        rt_device_write(LED_dev,0,&led_value,1);
+        led_value++;
+    }
+    rt_device_close(LED_dev);
+    cmd("Initializing~");
+
+    for(i=0;i<128;i++)
+    draw_bmp(i,63,"/background.bmp",0);
+    draw_bmp(0,43,"/24L01_1.bmp",1);
+    draw_bmp(24,43,"/icon/AHKScript.bmp",1);
+    draw_bmp(48,43,"/icon/KeyBoardOff.bmp",0);
+    draw_bmp(72,43,"/icon/AHKScript_1.bmp",1);
+    draw_bmp(96,43,"/icon/micoff.bmp",1);
+    draw_bmp(0,23,"/icon/mouseoff.bmp",1);
+    draw_bmp(24,23,"/icon/udisk_rd.bmp",1);
+
+}
+
+
 int rt_application_init()
 {
-    ini_init();
+    
+    
+    rt_thread_init(&thread_init,
+                   "init",
+                   rt_thread_entry_init,
+                   RT_NULL,
+                   &thread_init_stack[0],
+            sizeof(thread_init_stack),1,5);
+    
+
     rt_thread_init(&thread_usb,
                    "thread_usb",
                    rt_thread_entry_usb,
@@ -465,19 +335,24 @@ int rt_application_init()
                    &thread_Flash_Read_stack[0],
             sizeof(thread_Flash_Read_stack),11,5);
     rt_thread_startup(&thread_Flash_Read);
-
-    rt_thread_init(&thread_ld3320,
-                   "ld3320",
-                   rt_thread_entry_ld3320,
-                   RT_NULL,
-                   &thread_ld3320_stack[0],
-            sizeof(thread_ld3320_stack),12,5);
-    rt_thread_startup(&thread_ld3320);
+    
+    if(ini.Service.audio)
+    {
+        rt_thread_init(&thread_ld3320,
+                       "ld3320",
+                       rt_thread_entry_ld3320,
+                       RT_NULL,
+                       &thread_ld3320_stack[0],
+                sizeof(thread_ld3320_stack),12,5);
+        rt_thread_startup(&thread_ld3320);
+    }
+    rt_thread_startup(&thread_init);
         
   //  Jacob_appinit();
 
     mq_commu=rt_mq_create ("mq_commu", 9, 500, RT_IPC_FLAG_FIFO);
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
     sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);
+    sem_app_init=rt_sem_create ("sem_init", 0, RT_IPC_FLAG_FIFO);
     return 0;
 }

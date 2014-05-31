@@ -4,10 +4,9 @@
 #include "string.h"
 #include "app_interface.h"
 
-
 u8 control_key_decode(u8 key);
 
-
+int ahk_init(char *path);
 enum ctrl_dir{ctrl_left=1,ctrl_right,ctrl_both,ctrl_raw};
 u8 filter_add(struct control_key_filter* filter,u8* filter_info);
 u8 key_mode_process(u8* read_buf,u32 size);

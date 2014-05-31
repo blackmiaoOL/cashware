@@ -2,11 +2,11 @@
 #include "string.h"
 #include "ahk_analyser.h"
 #include "key_remap.h"
-
+#include "inifile.h"
 
 
 rt_device_t OLED_dev;
-extern rt_sem_t sem_flash;
+
 u8 read_buf[9000];
 u8 buf_out[9];
 
@@ -49,6 +49,7 @@ void cmd(u8* content)
     u32 content_char_cnt=0;
     u8 content_line_cnt=0;
     u8 i=0;
+    return ;
     while(content[content_char_cnt]!=0)
     {
         content_char_cnt++;
@@ -76,7 +77,7 @@ void cmd_line(u8* content)
     u32 content_char_cnt=0;
     //	u32 content_line_cnt;
     static u32 line_cnt=0;
-    static u8 OLED_buf[4][16];
+    static u8 OLED_buf[4*16];
     while(content[content_char_cnt]!=0)
     {
         content_char_cnt++;
@@ -91,7 +92,7 @@ void cmd_line(u8* content)
         u8 j=0;
         for(j=0;j<min(16,content_char_cnt);j++)
         {
-            OLED_buf[line_cnt][j]=content[j];
+            OLED_buf[(line_cnt<<4)+j]=content[j];
         }
     }
     else
@@ -102,17 +103,17 @@ void cmd_line(u8* content)
             u8 j=0;
             for(j=0;j<16;j++)
             {
-                OLED_buf[i][j]=OLED_buf[i+1][j];
+                OLED_buf[(i<<4)+j]=OLED_buf[((i+1)<<4)+j];
             }
         }
 
         for(i=0;i<16;i++)
         {
-            OLED_buf[3][i]=0;
+            OLED_buf[(3<<4)+i]=0;
         }
         for(i=0;i<min(16,content_char_cnt);i++)
         {
-            OLED_buf[3][i]=content[i];
+            OLED_buf[(3<<4)+i]=content[i];
         }
 
     }
@@ -122,7 +123,7 @@ void cmd_line(u8* content)
     for(i=0;i<4;i++)
     {
         //		u8 k=0;
-        OLED_dev->write(OLED_dev,(i*2),OLED_buf[i],16);
+        OLED_dev->write(OLED_dev,(i*2),&OLED_buf[i<<4],16);
         //		for(k=0;k<16;k++)
         //		DBG("OLED:%d",OLED_buf[i][k]);
     }
@@ -186,6 +187,65 @@ u8 control_key_filt(u8 key,ctrl_filter* filter)
         return 0;
     else
         return 1;
+}
+void key_cap_Init()
+{
+    u16 i=0;
+    for(i=0;i<key_cap_cnt_all-1;i++)
+    {
+        key_cap_free[i].next=&key_cap_free[i+1];
+    }
+    key_cap_free[key_cap_cnt-1].next=RT_NULL;
+}
+void key_cap_del(u16 index)
+{
+
+}
+void press_string_pure(u16 *buf,u32 lenth)
+{
+    u32 i=0;
+    u8 control_key=0;
+    buf_clear();
+    buf_out[1]=0;
+    for(i=0;i<lenth;i+=1)
+    {
+        
+        if(buf[i]&(1<<9))
+        {
+            control_key|=buf[i];
+            buf_out[1]=control_key;
+            press;
+        }
+        else if(buf[i]&(1<<10))
+        {
+            control_key&=(~buf[i]);
+            buf_out[1]=control_key;
+            press;
+        }
+        else if(buf[i]&(1<<8))
+        {
+            buf_out[1]=LShift;
+            buf_out[3]=buf[i];
+            press;
+            buf_out[1]=0;
+            
+        }
+        else
+        {
+            buf_out[3]=buf[i];
+            buf_out[1]=control_key;
+            press;
+        }
+        
+        
+        //printf("press%d\r\n",buf_out[3]);
+        if(i!=lenth-1)
+        buf_clear();
+    }
+}
+void press_string(cap * cap_this)
+{
+    press_string_pure(cap_this->string,cap_this->string_lenth); 
 }
 bool key_capture(u8 *buf)
 {
@@ -313,77 +373,27 @@ void  key_cap_add(cap* cap_this)
     key_cap_cnt++;
 
 }
+
+ALIGN(RT_ALIGN_SIZE)
+char thread_app_stack[4096];
+struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter)
 {
-    static FATFS fs;  		//逻辑磁盘工作区.
-    static FIL file;	  		//文件1
+//    static FATFS fs;  		//逻辑磁盘工作区.
+//    static FIL file;	  		//文件1
     u8 key_temp[2];
     cap  cap_this2;
     ctrl_filter filter;
     block_info block;
-    //	static FIL ftemp;	  		//文件2.
-    //	static UINT br,bw;			//读写变量
-    //	static FILINFO fileinfo;	//文件信息
-    //	static DIR dir;
 
-    u32 cnt=0;
-    u32 i=0;
-
-
-    key_cap_Init();
-    OLED_dev=rt_device_find("OLED");
-
-    if(OLED_dev!=RT_NULL)
-    {
-        rt_kprintf("OLED dev found\n\r");
-        //    rt_device_write(OLED_dev,0,&led_value,1);
-        //  led_value++;
-    }
     cmd("Initializing~");
-	rt_device_open(OLED_dev,RT_DEVICE_FLAG_ACTIVATED);
-
     rt_sem_take(sem_flash,RT_WAITING_FOREVER);
-    f_mount(&fs,"/",1);
-    f_mkdir("/sks");
-    //	f_opendir(&dir,"/");
-
-    printf("open:%d",f_open(&file,"/key_t",FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN));
-    printf("read:%d",f_read(&file,read_buf,file.fsize,&cnt));
-    printf("size=%d\r\n",file.fsize);
-    for(i=0;i<file.fsize;i++)
-    {
-        putchar(read_buf[i]);
-    }
-    f_close(&file);
     
-    if(key_table_process(read_buf,file.fsize))
-    {
-        cmd("Key table error");
-    }
-    else
-    {
-        cmd("Key table done");
-    }
 
-    printf("open:%d",f_open(&file,"/mode_1",FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN));
-    printf("read:%d",f_read(&file,read_buf,file.fsize,&cnt));
-    printf("size=%d\r\n",file.fsize);
-    rt_sem_release(sem_flash);
-    for(i=0;i<file.fsize;i++)
-    {
-        putchar(read_buf[i]);
-    }
-    f_close(&file);
-
-    if(key_mode_process(read_buf,file.fsize))
-    {
-        cmd("Key mode error");
-    }
-    else
-    {
-        cmd("Key mode done");
-    }
-   // rt_kprintf("cap cnt:%d\r\n",);
+    if(ini.Service.key_remap)
+        key_remap_init();
+    if(ini.Service.ahk)
+        ahk_init((char*)"/mode_1");
     cmd("Done");
     
     key_temp[0]=0;

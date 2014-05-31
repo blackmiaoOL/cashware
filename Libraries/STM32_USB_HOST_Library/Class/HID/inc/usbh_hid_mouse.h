@@ -96,6 +96,7 @@ extern HID_MOUSE_Data_TypeDef	 HID_MOUSE_Data;
 /** @defgroup USBH_HID_MOUSE_Exported_FunctionsPrototype
   * @{
   */ 
+void mouse_code(u8 * mouse_data);
 void  USR_MOUSE_Init (void);
 void  USR_MOUSE_ProcessData (HID_MOUSE_Data_TypeDef *data);
 /**

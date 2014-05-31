@@ -3,6 +3,36 @@
 #define isCtrlKey(a) (a=='#'?true:a=='!'?true:a=='^'?true:a=='+'?true:false)
 
 u32 line_cnt;
+int ahk_init(char *path)
+{
+    FIL file; 
+    u32 cnt=0;
+    u32 i=0;
+    #define ahk_print(arg...) {do{if(ini.Debug.ahk){DBG(arg);}else{ no_use_printf(arg);}}while(0);}
+    #define ahk_putchar(arg) {do{if(ini.Debug.ahk){putchar(arg);}else{no_use_putchar(arg);}}while(0);}
+    ahk_print("open:%d",f_open(&file,(const char*)path,FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN));
+    ahk_print("read:%d",f_read(&file,read_buf,file.fsize,&cnt));
+    ahk_print("size=%d\r\n",file.fsize);
+
+    for(i=0;i<file.fsize;i++)
+    {
+        ahk_putchar(read_buf[i]);
+    }
+    f_close(&file);
+    rt_sem_release(sem_flash);
+    rt_sem_release(sem_app_init);
+    
+    
+    if(key_mode_process(read_buf,file.fsize))
+    {
+        cmd("Key mode error");
+    }
+    else
+    {
+        cmd("Key mode done");
+    }
+    return 0;
+}
 u8 control_key_decode(u8 key)
 {
     switch(key)
@@ -695,10 +725,6 @@ u8 key_mode_process(u8* read_buf,u32 size)
     }
     return 0;
 }
-extern rt_mq_t mq_commu;
-ALIGN(RT_ALIGN_SIZE)
-char thread_app_stack[4096];
-struct rt_thread thread_app;
 
 
 
@@ -723,88 +749,14 @@ struct rt_thread thread_app;
 
 
 
-void key_cap_Init()
-{
-    u16 i=0;
-    for(i=0;i<key_cap_cnt_all-1;i++)
-    {
-        key_cap_free[i].next=&key_cap_free[i+1];
-    }
-    key_cap_free[key_cap_cnt-1].next=RT_NULL;
-}
-
-
-//buf 0~7:USBcode 8:if press LShift 9:control_key add 10:control_key del
-void press_string_pure(u16 *buf,u32 lenth)
-{
-    u32 i=0;
-    u8 control_key=0;
-    buf_clear();
-    buf_out[1]=0;
-    for(i=0;i<lenth;i+=1)
-    {
-        
-        if(buf[i]&(1<<9))
-        {
-            control_key|=buf[i];
-            buf_out[1]=control_key;
-            press;
-        }
-        else if(buf[i]&(1<<10))
-        {
-            control_key&=(~buf[i]);
-            buf_out[1]=control_key;
-            press;
-        }
-        else if(buf[i]&(1<<8))
-        {
-            buf_out[1]=LShift;
-            buf_out[3]=buf[i];
-            press;
-            buf_out[1]=0;
-            
-        }
-        else
-        {
-            buf_out[3]=buf[i];
-            buf_out[1]=control_key;
-            press;
-        }
-        
-        
-        //printf("press%d\r\n",buf_out[3]);
-        if(i!=lenth-1)
-        buf_clear();
-    }
-}
-void press_string(cap * cap_this)
-{
-    press_string_pure(cap_this->string,cap_this->string_lenth); 
-}
-
-
-void key_cap_del(u16 index)
-{
-
-}
-
-
-
-//const u8 start_slogan[]="Hello,my dear master~\r\n"  \
-//    "What do you want to do?\r\n"                             \
-//    "a:add new string \r\n" \
-//    "b:change hotkey \r\n" \
-//    ;
-
-
-extern  const  int8_t HID_KEYBRD_Key[];
-extern const  uint8_t  HID_KEYBRD_Codes[];
 
 
 
 
-void Down_Up(u8 func_key,u8 ascii_key)
-{
+////buf 0~7:USBcode 8:if press LShift 9:control_key add 10:control_key del
 
-}
+
+
+
+
 

@@ -2,36 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "stm32f4lib.h"
+
 #include "inifile.h"
 #define BUF_SIZE 256
-struct ini_oled{
-    int orientation;
-};  
-struct ini_service{
-    bool audio;
-    bool key_remap;
-    bool ahk;
-    bool mouse_gesture;
-    int first_mode;
-    
-};
 
-struct ini_debug{
-    bool usb_init;
-    bool audio;
-    bool mouse;
-    bool keyboard;
-    bool nrf24l01;
-    bool ini;
-    bool key_remap;
-    bool ahk;
-};
-struct ini_top{
-    struct ini_debug Debug;
-    struct ini_service Service;
-    struct ini_oled OLED;
-};
 struct ini_top ini;
 char ini_tmp[BUF_SIZE];
 int ini_read_string(const char *section,const char *key)
@@ -177,8 +151,11 @@ static int load_ini_file(const char *file_name, char *buf,int *file_size)
         unsigned int cnt=0;   
         *file_size = 0;
         if(f_open(&file,file_name,FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN))
- 
-                return 0;
+        {
+            printf("ini read fail\r\n");
+            return 0;
+        }
+                
 
         if(f_read(&file,buf,file.fsize,&cnt))
                  return 0;
