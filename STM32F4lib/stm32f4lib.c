@@ -323,4 +323,13 @@ void pc_real(u8 cc)
 	 while (USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);
 	delay_ms(1);
 }
+  void IO1(GPIO_TypeDef *IOBase,uint16_t PIN)
+{
  
+	IOBase->BSRRL=PIN;
+}
+
+ void IO0(GPIO_TypeDef *IOBase,uint16_t PIN)
+{
+	IOBase->BSRRH=PIN;
+}

@@ -5,6 +5,9 @@
 #include "rtthread.h"
 #include "ff.h"
 #include "inifile.h"
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 bool key_capture(u8 *buf);
 void key_cap_Init(void);
 void press_string_pure(u16 *buf,u32 lenth);

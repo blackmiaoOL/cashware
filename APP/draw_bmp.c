@@ -21,13 +21,17 @@ struct tagBITMAPINFOHEADER
     u32 biClrUsed;  
     u32 biClrImportant; 
 } bitmap_info_header;
+struct colorBOARD{
+    u32 color1;
+    u32 color2;
+}color_board;
 void num_change(u32 *num)
 {
     u32 num_temp;
     num_temp=((*num&0xff)<<24)|((*num&0xff00)<<8)|((*num&0xff0000)>>8)|((*num&0xff000000)>>24);
     *num=num_temp;
 }
-int draw_bmp(u16 x,u16 y,char *buf,u8 dir)
+int draw_bmp(u16 x,u16 y,char *buf)
 {
     FIL file; 
     u32 cnt=0;
@@ -36,16 +40,23 @@ int draw_bmp(u16 x,u16 y,char *buf,u8 dir)
     u32 file_header_size;
     u32 map_info_size;
     u8 err;
+    
+    
     y=63-y;
     debug_en=1;
-    
-    err=f_open(&file,(const char*)buf,FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN);
+    rt_sem_take(sem_flash,RT_WAITING_FOREVER);
+    err=f_open(&file,(const char*)buf,FA_OPEN_EXISTING|FA_READ);
     if(err)
     {
         DBG("open err:%d\r\n",err);
         return -1;
     }
+   // if(x==0)
     f_read(&file,read_buf,file.fsize,&cnt);
+    
+    f_close(&file);
+    rt_sem_release(sem_flash);
+    
     //DBG("size=%d\r\n",file.fsize);
     file_header_size=14;
     map_info_size=sizeof(bitmap_info_header)/8*8;
@@ -60,6 +71,11 @@ int draw_bmp(u16 x,u16 y,char *buf,u8 dir)
         *((u8 *)(&bitmap_info_header)+i-file_header_size)=read_buf[i];
         //putchar(read_buf[i]);
     }
+    for(i=bitmap_file_header.bfOffBits-8;i<bitmap_file_header.bfOffBits;i++)
+    {
+        *((u8 *)(&color_board)+i-(bitmap_file_header.bfOffBits-8))=read_buf[i];
+        //putchar(read_buf[i]);
+    }
 
     //num_change(&(bitmap_info_header.biHeight));
     //num_change(&(bitmap_file_header.bfOffBits));
@@ -67,8 +83,8 @@ int draw_bmp(u16 x,u16 y,char *buf,u8 dir)
 //    DBG("height:%d,width:%d\r\n",bitmap_info_header.biHeight,bitmap_info_header.biWidth);
 //    DBG("size:%d,offset:%d\r\n",sizeof(bitmap_file_header),bitmap_file_header.bfOffBits);
 //    DBG("height:%d,width:%d\r\n",bitmap_info_header.biHeight,bitmap_info_header.biWidth);
-    f_close(&file);
-    if(dir)
+    
+    if(color_board.color1>0xffff)
         rt_device_control(OLED_dev,4, ( void *)0);
     else
         rt_device_control(OLED_dev,3, ( void *)0);

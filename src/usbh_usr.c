@@ -209,6 +209,8 @@ void USBH_USR_UnrecoveredError (void)
 void USBH_USR_DeviceDisconnected (void)
 {
   DBG ("Device Disconnected \n"); 
+        draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
+    draw_bmp(0,23,"/icon/MouseOff.bmp");
 }
 
 /**
@@ -293,12 +295,12 @@ void USBH_USR_Configuration_DescAvailable(USBH_CfgDesc_TypeDef * cfgDesc,
   
   if((*id).bInterfaceClass  == 0x08)
   {
-        //DBG ("%s\n", MSG_MSC_CLASS);
+        DBG ("%s\n", MSG_MSC_CLASS);
   }
   else if((*id).bInterfaceClass  == 0x03)
   {
 
-        //DBG ("%s\n", MSG_HID_CLASS);
+        DBG ("%s\n", MSG_HID_CLASS);
   }   
 }
 
@@ -402,7 +404,9 @@ void USBH_USR_OverCurrentDetected (void)
 */
 void USR_MOUSE_Init	(void)
 {
-   
+   DBG("INITMOUSE");
+
+    draw_bmp(0,23,"/icon/MouseOn.bmp");
 }
 
 /**
@@ -455,6 +459,8 @@ void USR_MOUSE_ProcessData(HID_MOUSE_Data_TypeDef *data)
 */
 void  USR_KEYBRD_Init (void)
 {
+    //DBG("INITKEYBOARD");
+       draw_bmp(52,43,"/icon/KeyBoardOn.bmp");
 
 }
 

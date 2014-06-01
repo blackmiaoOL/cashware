@@ -47,9 +47,12 @@ double qiufangcha(struct mouse_pos *track, int count) {
 bool mouse_capture(u8 *mail)
 {
   //  u8 i=0;
+
+        
     HID_MOUSE_Data_TypeDef * mouse=(HID_MOUSE_Data_TypeDef *)mail;
     static u8 key_state=0;
-    
+        if(ini.Service.mouse_gesture==false)
+        return true;
 //    for(i=0;i<8;i++)
 //    {
 //        DBG("%d",mail[i]);

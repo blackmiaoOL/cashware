@@ -3,6 +3,7 @@
 #include "rtthread.h"
 #include "app_interface.h"
 #include "mouse_gesture.h"
+
 //PIN0~PIN7:info
 //PIN8:CLK
 //PIN9:endflag(high enable)
@@ -255,7 +256,7 @@ u8 commu_send_byte(u8 info)
 //    commu_send_byte_half(info);
 //	commu_send_byte_half(info<<4);
 
-	int i,j,k;
+	int j;
 	u8 data=0;
 
    FPGA_CS_L;
@@ -269,11 +270,9 @@ u8 commu_send_byte(u8 info)
   while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
    FPGA_CS_H;
   /*!< Return the Half Word read from the SPI bus */
-  	for(i=0;i<1;i++)
-	{
-		for(j=0;j<10;j++)
-		for(k=0;k<62;k++);
-	}
+
+		for(j=0;j<100;j++);
+
   data=SPI_I2S_ReceiveData(SPI1);
  // DBG("%c-%c",info,data);
   return data;

@@ -236,10 +236,10 @@ static void rt_thread_entry_usb(void* parameter)
 	while(1)
 	{
 		USBH_Process(&USB_OTG_Core_dev , &USB_Host);
-        rt_thread_delay(1);       
+        rt_thread_delay(3);       
 	} 
 }
-extern  char thread_app_stack[4096];
+extern  char thread_app_stack[50196];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 
@@ -278,14 +278,14 @@ void rt_thread_entry_init(void* parameter)
     cmd("Initializing~");
 
     for(i=0;i<128;i++)
-    draw_bmp(i,63,"/background.bmp",0);
-    draw_bmp(0,43,"/24L01_1.bmp",1);
-    draw_bmp(24,43,"/icon/AHKScript.bmp",1);
-    draw_bmp(48,43,"/icon/KeyBoardOff.bmp",0);
-    draw_bmp(72,43,"/icon/AHKScript_1.bmp",1);
-    draw_bmp(96,43,"/icon/micoff.bmp",1);
-    draw_bmp(0,23,"/icon/mouseoff.bmp",1);
-    draw_bmp(24,23,"/icon/udisk_rd.bmp",1);
+    draw_bmp(i,63,"/background.bmp");
+    draw_bmp(0,43,"/24L01_1.bmp");
+    draw_bmp(26,43,"/icon/AHKScript.bmp");
+    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
+    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
+    draw_bmp(104,43,"/icon/micoff.bmp");
+    draw_bmp(0,23,"/icon/MouseOff.bmp");
+    draw_bmp(24,23,"/icon/udisk_rd.bmp");
 
 }
 

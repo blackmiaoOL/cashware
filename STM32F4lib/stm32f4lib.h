@@ -35,20 +35,13 @@ u32 StringToInt(u8 * mm,u8 jinzhi);
 u32 min(short *miao,u32 len);
 void pc_real(u8 cc);
 #define pc(a) pc_real(a)
-__inline void IO1(GPIO_TypeDef *IOBase,uint16_t PIN)
-{
- 
-	IOBase->BSRRL=PIN;
-}
-
-__inline void IO0(GPIO_TypeDef *IOBase,uint16_t PIN)
-{
-	IOBase->BSRRH=PIN;
-}
+void IO1(GPIO_TypeDef *IOBase,uint16_t PIN);
+void IO0(GPIO_TypeDef *IOBase,uint16_t PIN);
 __inline void IOset(GPIO_TypeDef *IOBase,uint16_t PIN,bool value)
 {
    value?IO1(IOBase,PIN):IO0(IOBase,PIN);
 }
+
 void no_use_printf(char *shuru,...);
 void no_use_putchar(char data);
 /////////////外设地址定义，第二位是1，则RCC->APB2ENR2，以此类推//////////////////

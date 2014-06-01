@@ -3,7 +3,7 @@
 #include "ahk_analyser.h"
 #include "key_remap.h"
 #include "inifile.h"
-
+#include "pwd.h"
 
 rt_device_t OLED_dev;
 
@@ -253,6 +253,8 @@ bool key_capture(u8 *buf)
     static  u8 hotkey_flag=0;
     static  u8 hotkey_value=0;
     u8 control_key_this;
+    bool result=true;
+    static u8 buf_pre[8];
     //DBG("CNT=%d",key_cap_cnt);
     //    for(i=0;i<8;i++)
     //    {
@@ -275,7 +277,8 @@ bool key_capture(u8 *buf)
             DBG("I block it!\r\n");
             buf[2]=0;
             buf[0]=0;
-            return true;
+            result= true;
+            goto result;
         }
         else if(buf[0]!=0)
         {
@@ -310,12 +313,15 @@ bool key_capture(u8 *buf)
                 hotkey_flag=1;
                 hotkey_value=buf[2];
 
-                return false;
+                result= false;
+                goto result;
             }
         }
     }
-
-    return true;
+result:
+    for(i=0;i<8;i++)
+        buf_pre[i]=buf[i];
+    return result;
 }
 
 void blue_set(cap * cap_this)
@@ -375,7 +381,7 @@ void  key_cap_add(cap* cap_this)
 }
 
 ALIGN(RT_ALIGN_SIZE)
-char thread_app_stack[4096];
+char thread_app_stack[50196];
 struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter)
 {
@@ -386,7 +392,6 @@ void rt_thread_entry_app(void* parameter)
     ctrl_filter filter;
     block_info block;
 
-    cmd("Initializing~");
     rt_sem_take(sem_flash,RT_WAITING_FOREVER);
     
 
@@ -416,9 +421,124 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.key_exe=blue_set;
     key_cap_add(&cap_this2);
     
-    
+    key_temp[0]=0;
+    key_temp[1]='!';
+    filter_Init(&filter);
+    filter_add(&filter,key_temp);
+    key_temp[0]=0;
+    key_temp[1]='^';
+    filter_add(&filter,key_temp);
+    filter.key=ascii2usb['k'];
+    block.filter=filter;
+    cap_this2.filter=block.filter;
+    cap_this2.key_exe=pwd_start;
+    key_cap_add(&cap_this2);
+     
 }
+u8 getkey()
+{
+    return 0;
+}
+//#define  KBD_LEFT_CTRL                                  0x01
+//#define  KBD_LEFT_SHIFT                                 0x02
+//#define  KBD_LEFT_ALT                                   0x04
+//#define  KBD_LEFT_GUI                                   0x08
+//#define  KBD_RIGHT_CTRL                                 0x10
+//#define  KBD_RIGHT_SHIFT                                0x20
+//#define  KBD_RIGHT_ALT                                  0x40
+//#define  KBD_RIGHT_GUI                                  0x80
+//#ifndef FALSE
+//#define FALSE 0
+//#endif
 
+//#ifndef TRUE
+//#define TRUE 1
+//#endif
+//static void KEYBRD_Decode(uint8_t *pbuf)
+//{
+//  static  uint8_t   shift;
+//  static  uint8_t   keys[6];
+//  static  uint8_t   keys_new[6];
+//  static  uint8_t   keys_last[6];
+//  static  uint8_t   key_newest;
+//  static  uint8_t   nbr_keys;
+//  static  uint8_t   nbr_keys_new;
+//  static  uint8_t   nbr_keys_last;
+//  uint8_t   ix;
+//  uint8_t   jx;
+//  uint8_t   error;
+//  uint8_t   output;            
+//  
+////  STM_EVAL_LEDToggle(LED_Orange);  // added by "STM32"
+//  
+//  nbr_keys      = 0;
+//  nbr_keys_new  = 0;
+//  nbr_keys_last = 0;
+//  key_newest    = 0x00;
+//  
+//  
+//  /* Check if Shift key is pressed */                                                                         
+//  if ((pbuf[0] == KBD_LEFT_SHIFT) || (pbuf[0] == KBD_RIGHT_SHIFT)) {
+//    shift = TRUE;
+//  } else {
+//    shift = FALSE;
+//  }
+//  
+//  error = FALSE;
+//  
+//  /* Check for the value of pressed key */
+//  for (ix = 2; ix < 2 + KBR_MAX_NBR_PRESSED; ix++) {                       
+//    if ((pbuf[ix] == 0x01) ||
+//        (pbuf[ix] == 0x02) ||
+//          (pbuf[ix] == 0x03)) {
+//            error = TRUE;
+//          }
+//  }
+//  
+//  if (error == TRUE) {
+//    return;
+//  }
+//  
+//  nbr_keys     = 0;
+//  nbr_keys_new = 0;
+//  for (ix = 2; ix < 2 + KBR_MAX_NBR_PRESSED; ix++) {
+//    if (pbuf[ix] != 0) {
+//      keys[nbr_keys] = pbuf[ix];                                       
+//      nbr_keys++;
+//      for (jx = 0; jx < nbr_keys_last; jx++) {                         
+//        if (pbuf[ix] == keys_last[jx]) {
+//          break;
+//        }
+//      }
+//      
+//      if (jx == nbr_keys_last) {
+//        keys_new[nbr_keys_new] = pbuf[ix];
+//        nbr_keys_new++;
+//      }
+//    }
+//  }
+//  
+//  if (nbr_keys_new == 1) {
+//    key_newest = keys_new[0];
+//    
+//    if (shift == TRUE) {
+//      output =  HID_KEYBRD_ShiftKey[HID_KEYBRD_Codes[key_newest]];
+//    } else {
+//      output =  HID_KEYBRD_Key[HID_KEYBRD_Codes[key_newest]];
+//    }
+//    
+//    /* call user process handle */
+//    USR_KEYBRD_ProcessData(output);
+//  } else {
+//    key_newest = 0x00;
+//  }
+//  
+//  
+//  nbr_keys_last  = nbr_keys;
+//  for (ix = 0; ix < KBR_MAX_NBR_PRESSED; ix++) {
+//    keys_last[ix] = keys[ix];
+//  }
+//}
 
 
 

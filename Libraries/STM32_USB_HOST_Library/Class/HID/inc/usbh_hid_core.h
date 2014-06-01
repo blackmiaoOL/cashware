@@ -35,7 +35,7 @@
 #include "usb_bsp.h"
 #include "usbh_ioreq.h"
 #include "usbh_hcs.h"
- 
+
 /** @addtogroup USBH_LIB
   * @{
   */

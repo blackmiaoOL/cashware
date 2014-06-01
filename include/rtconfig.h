@@ -54,7 +54,7 @@
 
 /* Using Message Queue */
 #define RT_USING_MESSAGEQUEUE
-
+#define RT_USING_LUA
 /* SECTION: Memory Management */
 /* Using Memory Pool Management*/
 #define RT_USING_MEMPOOL
@@ -68,7 +68,7 @@
 /* SECTION: Device System */
 /* Using Device System */
 #define RT_USING_DEVICE
-
+#define RT_USING_ARM_LIBC
 /* SECTION: Console options */
 #define RT_USING_CONSOLE
 /* the buffer size of console*/
