@@ -533,5 +533,16 @@ int luaD_protectedparser (lua_State *L, ZIO *z, const char *name) {
   luaZ_freebuffer(L, &p.buff);
   return status;
 }
+void exit(int a )
+{
 
+}
+int system(const char * a)
+{
+    return 0;
+}
+int time(int a)
+{
+    return a;
+}
 

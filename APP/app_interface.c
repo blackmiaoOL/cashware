@@ -381,7 +381,7 @@ void  key_cap_add(cap* cap_this)
 }
 
 ALIGN(RT_ALIGN_SIZE)
-char thread_app_stack[1196];
+char thread_app_stack[10196];
 struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter)
 {

@@ -24,7 +24,7 @@
 #include "dfs_posix.h"
 #endif
 
-#pragma import(__use_no_semihosting_swi)
+//#pragma import(__use_no_semihosting_swi)
 
 /* TODO: Standard IO device handles. */
 #define STDIN       1

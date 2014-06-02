@@ -344,7 +344,7 @@
             <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
-            <OneElfS>1</OneElfS>
+            <OneElfS>0</OneElfS>
             <Strict>0</Strict>
             <EnumInt>0</EnumInt>
             <PlainCh>0</PlainCh>
@@ -354,7 +354,7 @@
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <VariousControls>
-              <MiscControls> --c99</MiscControls>
+              <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER, STM32F4XX, USE_FULL_ASSERT, USE_USB_OTG_FS,DEBUG</Define>
               <Undefine></Undefine>
               <IncludePath>..\inc;..\Libraries\CMSIS\Include;..\Libraries\STM32_USB_HOST_Library\Core\inc;..\Libraries\STM32_USB_OTG_Driver\inc;..\Libraries\STM32F4xx_StdPeriph_Driver\inc;..\Utilities\STM32_EVAL;..\Libraries\Device\STM32F4xx\Include;..\src;..\Libraries\STM32_USB_HOST_Library\Class\HID\inc;..\Libraries\STM32_USB_HOST_Library\Class\MSC\inc;..\Libraries\STM32_USB_OTG_Driver\inc;..\STM32F4lib;..\MDK;..\applications;..\build;..\inc;..\Libraries;..\Utilities;..\include;..\drivers;..\finsh;..\APP;..\drivers\ff10a\src;..\LD_Driver;..\RT-THREAD\finsh;..\lua\applications;..\lua\exlibs;..\lua\lua;..\lua\test</IncludePath>
@@ -388,7 +388,7 @@
             <ScatterFile></ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc></Misc>
+            <Misc>--keep __fsym_* --keep __vsym_*</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>

@@ -154,7 +154,7 @@ static void rt_thread_entry_ld3320(void* parameter)
 		
         while(PCin(2)!=0)
         {
-            rt_thread_delay(3); 
+            rt_thread_delay(1); 
         }
         ProcessInt0();
         LD_loop();
@@ -239,7 +239,7 @@ static void rt_thread_entry_usb(void* parameter)
         rt_thread_delay(3);       
 	} 
 }
-extern  char thread_app_stack[1196];
+extern  char thread_app_stack[10196];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 
