@@ -48,7 +48,7 @@
           <OutputName>STM32F407VGT6</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>1</CreateHexFile>
+          <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\</ListingPath>
@@ -102,11 +102,11 @@
         </CommonProperty>
         <DllOption>
           <SimDllName>SARMCM3.DLL</SimDllName>
-          <SimDllArguments>-REMAP -MPU</SimDllArguments>
+          <SimDllArguments> -MPU</SimDllArguments>
           <SimDlgDll>DCM.DLL</SimDlgDll>
           <SimDlgDllArguments>-pCM4</SimDlgDllArguments>
           <TargetDllName>SARMCM3.DLL</TargetDllName>
-          <TargetDllArguments>-REMAP -MPU</TargetDllArguments>
+          <TargetDllArguments> -MPU</TargetDllArguments>
           <TargetDlgDll>TCM.DLL</TargetDlgDll>
           <TargetDlgDllArguments>-pCM4</TargetDlgDllArguments>
         </DllOption>
@@ -844,16 +844,6 @@
           <GroupName>lua</GroupName>
           <Files>
             <File>
-              <FileName>lua_in_finsh.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\lua\applications\lua_in_finsh.c</FilePath>
-            </File>
-            <File>
-              <FileName>lexamplelib.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\lua\exlibs\lexamplelib.c</FilePath>
-            </File>
-            <File>
               <FileName>lapi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\lua\lua\lapi.c</FilePath>
@@ -897,6 +887,11 @@
               <FileName>legc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\lua\lua\legc.c</FilePath>
+            </File>
+            <File>
+              <FileName>lexamplelib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\lua\lua\lexamplelib.c</FilePath>
             </File>
             <File>
               <FileName>lfunc.c</FileName>
@@ -994,6 +989,16 @@
               <FilePath>..\lua\lua\ltm.c</FilePath>
             </File>
             <File>
+              <FileName>lua.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\lua\lua\lua.c</FilePath>
+            </File>
+            <File>
+              <FileName>lua_in_finsh.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\lua\lua\lua_in_finsh.c</FilePath>
+            </File>
+            <File>
               <FileName>lundump.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\lua\lua\lundump.c</FilePath>
@@ -1011,12 +1016,17 @@
             <File>
               <FileName>test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\lua\test\test.c</FilePath>
+              <FilePath>..\lua\lua\test.c</FilePath>
             </File>
             <File>
-              <FileName>lua.c</FileName>
+              <FileName>stubs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\lua\lua\lua.c</FilePath>
+              <FilePath>..\lua\armlibc\stubs.c</FilePath>
+            </File>
+            <File>
+              <FileName>mem_std.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\lua\armlibc\mem_std.c</FilePath>
             </File>
           </Files>
         </Group>

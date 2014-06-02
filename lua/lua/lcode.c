@@ -76,7 +76,7 @@ static int condjump (FuncState *fs, OpCode op, int A, int B, int C) {
   return luaK_jump(fs);
 }
 
-
+#define abs(signed_data) (((signed_data)>0)?(signed_data):(-(signed_data)))
 static void fixjump (FuncState *fs, int pc, int dest) {
   Instruction *jmp = &fs->f->code[pc];
   int offset = dest-(pc+1);

@@ -30,6 +30,7 @@ struct ini_service{
     bool ahk;
     bool mouse_gesture;
     int first_mode;
+    bool lua_script;
     
 };
 

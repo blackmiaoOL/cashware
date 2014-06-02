@@ -381,7 +381,7 @@ void  key_cap_add(cap* cap_this)
 }
 
 ALIGN(RT_ALIGN_SIZE)
-char thread_app_stack[10196];
+char thread_app_stack[40196];
 struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter)
 {
@@ -399,6 +399,10 @@ void rt_thread_entry_app(void* parameter)
         key_remap_init();
     if(ini.Service.ahk)
         ahk_init((char*)"/mode_1");
+    //if(ini.Service.lua_script)
+        lua_init();
+    rt_sem_release(sem_flash);
+    rt_sem_release(sem_app_init);
     cmd("Done");
     
     key_temp[0]=0;
@@ -433,7 +437,7 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.filter=block.filter;
     cap_this2.key_exe=pwd_start;
     key_cap_add(&cap_this2);
-     //lua_main();
+
 }
 u8 getkey()
 {

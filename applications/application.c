@@ -141,7 +141,7 @@ void LD3320_main_Init(void);
 void ProcessInt0(void );
 void LD_loop(void);
 ALIGN(RT_ALIGN_SIZE)
-static char thread_ld3320_stack[4096];
+static char thread_ld3320_stack[3096];
 struct rt_thread thread_ld3320;
 static void rt_thread_entry_ld3320(void* parameter)
 {
@@ -239,21 +239,23 @@ static void rt_thread_entry_usb(void* parameter)
         rt_thread_delay(3);       
 	} 
 }
-extern  char thread_app_stack[10196];
+extern  char thread_app_stack[40196];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 
 
 FATFS fs;
 ALIGN(RT_ALIGN_SIZE)
-char thread_init_stack[7024];
-struct rt_thread thread_init;
+char thread_init_stack[1024];
+struct rt_thread
+thread_init;
 void rt_thread_entry_init(void* parameter)
 {
     rt_device_t LED_dev;
     u8 led_value;
     u8 i;
     printf("-----%d------",f_mount(&fs,"/",1));
+    
     ini_init();
     key_cap_Init();
     blue_tooth_Init();

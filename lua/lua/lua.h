@@ -11,7 +11,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
-
+void rt_kprintf(const char *fmt, ...);
 
 #include "luaconf.h"
 

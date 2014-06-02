@@ -19,8 +19,7 @@ int ahk_init(char *path)
         ahk_putchar(read_buf[i]);
     }
     f_close(&file);
-    rt_sem_release(sem_flash);
-    rt_sem_release(sem_app_init);
+
     
     
     if(key_mode_process(read_buf,file.fsize))
