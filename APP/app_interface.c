@@ -4,7 +4,7 @@
 #include "key_remap.h"
 #include "inifile.h"
 #include "pwd.h"
-
+#include "lua_app.h"
 rt_device_t OLED_dev;
 
 u8 read_buf[9000];
@@ -305,7 +305,7 @@ bool key_capture(u8 *buf)
 
         if(control_key_filt(control_key_this,&(cap_this->filter))==0)
         {
-            DBG("(%d----%d)",key_cap_cnt,cap_this->filter.key);
+            //DBG("(%d----%d)",key_cap_cnt,cap_this->filter.key);
             if( buf[2]==cap_this->filter.key)
             {
                 DBG("I got it!\r\n");
@@ -379,7 +379,10 @@ void  key_cap_add(cap* cap_this)
     key_cap_cnt++;
 
 }
-
+void reset_system(struct st_key_cap* a)
+{
+NVIC_SystemReset();
+}
 ALIGN(RT_ALIGN_SIZE)
 char thread_app_stack[40196];
 struct rt_thread thread_app;
@@ -437,7 +440,25 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.filter=block.filter;
     cap_this2.key_exe=pwd_start;
     key_cap_add(&cap_this2);
+    
+    key_temp[0]=0;
+    key_temp[1]='!';
+    filter_Init(&filter);
+    filter_add(&filter,key_temp);
+    key_temp[0]=0;
+    key_temp[1]='^';
+    filter_add(&filter,key_temp);
+    filter.key=ascii2usb['r'];
+    block.filter=filter;
+    cap_this2.filter=block.filter;
+    cap_this2.key_exe=reset_system;
+    key_cap_add(&cap_this2);
 
+
+    {
+        u8 buf[9]={0};
+        rt_mq_send (mq_commu, (void*)buf, 9);
+    }
 }
 u8 getkey()
 {

@@ -404,7 +404,7 @@ void USBH_USR_OverCurrentDetected (void)
 */
 void USR_MOUSE_Init	(void)
 {
-   DBG("INITMOUSE");
+  // DBG("INITMOUSE");
 
     draw_bmp(0,23,"/icon/MouseOn.bmp");
 }

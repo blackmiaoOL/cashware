@@ -280,7 +280,7 @@ void rt_thread_entry_init(void* parameter)
     cmd("Initializing~");
     
     
-    for(i=0;i<128;i++)
+    for(i=0;i<1;i++)
     draw_bmp(i,63,"/background.bmp");
     
     draw_bmp(0,43,"/24L01_1.bmp");
