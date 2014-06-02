@@ -239,7 +239,7 @@ static void rt_thread_entry_usb(void* parameter)
         rt_thread_delay(3);       
 	} 
 }
-extern  char thread_app_stack[50196];
+extern  char thread_app_stack[1196];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 
@@ -276,17 +276,28 @@ void rt_thread_entry_init(void* parameter)
     }
     rt_device_close(LED_dev);
     cmd("Initializing~");
-
+    
+    
     for(i=0;i<128;i++)
     draw_bmp(i,63,"/background.bmp");
+    
     draw_bmp(0,43,"/24L01_1.bmp");
     draw_bmp(26,43,"/icon/AHKScript.bmp");
     draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
     draw_bmp(78,43,"/icon/AHKScript_1.bmp");
     draw_bmp(104,43,"/icon/micoff.bmp");
+    
     draw_bmp(0,23,"/icon/MouseOff.bmp");
-    draw_bmp(24,23,"/icon/udisk_rd.bmp");
-
+    draw_bmp(26,23,"/icon/udisk_rd.bmp");
+    draw_bmp(52,23,"/icon/udisk_rd.bmp");
+    draw_bmp(78,23,"/icon/udisk_rd.bmp");
+    draw_bmp(104,23,"/icon/udisk_rd.bmp");
+    
+    draw_bmp(0,63,"/icon/udisk_rd.bmp");
+    draw_bmp(26,63,"/icon/udisk_rd.bmp");
+    draw_bmp(52,63,"/icon/udisk_rd.bmp");
+    draw_bmp(78,63,"/icon/udisk_rd.bmp");
+    draw_bmp(104,63,"/icon/udisk_rd.bmp");
 }
 
 

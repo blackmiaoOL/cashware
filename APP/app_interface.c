@@ -381,7 +381,7 @@ void  key_cap_add(cap* cap_this)
 }
 
 ALIGN(RT_ALIGN_SIZE)
-char thread_app_stack[50196];
+char thread_app_stack[1196];
 struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter)
 {
@@ -433,7 +433,7 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.filter=block.filter;
     cap_this2.key_exe=pwd_start;
     key_cap_add(&cap_this2);
-     
+     //lua_main();
 }
 u8 getkey()
 {

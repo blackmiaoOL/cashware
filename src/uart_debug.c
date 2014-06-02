@@ -115,8 +115,8 @@ int GetKey (void)  {
 struct __FILE {
   int handle;                 // Add whatever you need here 
 };
-FILE __stdout;
-FILE __stdin;
+//FILE __stdout;
+//FILE __stdin;
 
 /*----------------------------------------------------------------------------
   fputc
