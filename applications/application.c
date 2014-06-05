@@ -254,7 +254,10 @@ void rt_thread_entry_init(void* parameter)
     rt_device_t LED_dev;
     u8 led_value;
     u8 i;
-    printf("-----%d------",f_mount(&fs,"/",1));
+    if(f_mount(&fs,"/",1))
+    {
+        DBG("FS mount failed!!\r\n");
+    }
     
     ini_init();
     key_cap_Init();
@@ -283,7 +286,7 @@ void rt_thread_entry_init(void* parameter)
     for(i=0;i<1;i++)
     draw_bmp(i,63,"/background.bmp");
     
-    draw_bmp(0,43,"/24L01_1.bmp");
+   // draw_bmp(0,43,"/24L01_1.bmp");
     draw_bmp(26,43,"/icon/AHKScript.bmp");
     draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
     draw_bmp(78,43,"/icon/AHKScript_1.bmp");
@@ -300,6 +303,7 @@ void rt_thread_entry_init(void* parameter)
     draw_bmp(52,63,"/icon/udisk_rd.bmp");
     draw_bmp(78,63,"/icon/udisk_rd.bmp");
     draw_bmp(104,63,"/icon/udisk_rd.bmp");
+    
 }
 
 

@@ -129,6 +129,7 @@ int  ini_init()
     READ_BOOL(ini,Debug,key_remap);
     READ_BOOL(ini,Debug,ahk);
     READ_INT(ini,OLED,orientation);
+    READ_INT(ini,OLED,orientation);
     
     return 0;  
 }

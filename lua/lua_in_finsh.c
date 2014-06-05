@@ -45,38 +45,38 @@ void finsh_lua(void *parameter)
     rt_device_set_rx_indicate(dev4lua.device, rx_indicate);
 }
 
-static void lua(void)
-{
-    rt_thread_t lua_thread;
-    const char* device_name = finsh_get_device();
-    rt_device_t device = rt_device_find(device_name);
-    if (device == RT_NULL)
-    {
-        rt_kprintf("%s not find\n", device_name);
-        return;
-    }
-    dev4lua.device = device;
+//static void lua(void)
+//{
+//    rt_thread_t lua_thread;
+//    const char* device_name = finsh_get_device();
+//    rt_device_t device = rt_device_find(device_name);
+//    if (device == RT_NULL)
+//    {
+//        rt_kprintf("%s not find\n", device_name);
+//        return;
+//    }
+//    dev4lua.device = device;
 
-#if 0
-    /* Run lua interpreter in separate thread */
-    lua_thread = rt_thread_create("lua",
-                                  finsh_lua,
-                                  0,
-                                  2048,
-                                  rt_thread_self()->current_priority + 1,
-                                  20);
-    if (lua_thread != RT_NULL)
-    {
-        rt_thread_startup(lua_thread);
-    }
-#else
-    /* Directly run lua interpreter in finsh */
+//#if 0
+//    /* Run lua interpreter in separate thread */
+//    lua_thread = rt_thread_create("lua",
+//                                  finsh_lua,
+//                                  0,
+//                                  2048,
+//                                  rt_thread_self()->current_priority + 1,
+//                                  20);
+//    if (lua_thread != RT_NULL)
+//    {
+//        rt_thread_startup(lua_thread);
+//    }
+//#else
+//    /* Directly run lua interpreter in finsh */
 
-    finsh_lua(0);
-    
-#endif
-}
-FINSH_FUNCTION_EXPORT(lua, lua interpreter)
+//    finsh_lua(0);
+//    
+//#endif
+//}
+//FINSH_FUNCTION_EXPORT(lua, lua interpreter)
 
 int readline4lua(const char *prompt, char *buffer, int buffer_size)
 {

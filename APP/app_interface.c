@@ -9,8 +9,9 @@ rt_device_t OLED_dev;
 
 u8 read_buf[9000];
 u8 buf_out[9];
-
+void KEYBRD_Decode(uint8_t *pbuf);
 void buf_clear(void);
+rt_mailbox_t mb_app;
 extern rt_mailbox_t mb_commu;
 cap key_cap_free[key_cap_cnt_all];
 //st_key_cap key_cap_use[200];
@@ -267,6 +268,8 @@ bool key_capture(u8 *buf)
     //        buf[0]|=(1<<4) ;
     //    }
     //printf("buf[0]_raw=%d\r\n",buf[0]);
+
+    
     buf[0]=key_process(buf[0]);//TODO
     control_key_this=buf[0];
     if(hotkey_flag)
@@ -290,6 +293,12 @@ bool key_capture(u8 *buf)
         {
             hotkey_flag=0;
         }
+    }
+    if(mb_app!=0)
+    {
+        KEYBRD_Decode(buf);
+        result= false;
+        goto result;
     }
     for(i=0;i<key_cap_cnt;i++)
     {
@@ -379,6 +388,7 @@ void  key_cap_add(cap* cap_this)
     key_cap_cnt++;
 
 }
+
 void reset_system(struct st_key_cap* a)
 {
 NVIC_SystemReset();
@@ -394,15 +404,17 @@ void rt_thread_entry_app(void* parameter)
     cap  cap_this2;
     ctrl_filter filter;
     block_info block;
-
+    {
+        u8 buf[9]={0};
+        rt_mq_send (mq_commu, (void*)buf, 9);
+    }
     rt_sem_take(sem_flash,RT_WAITING_FOREVER);
-    
-
     if(ini.Service.key_remap)
         key_remap_init();
     if(ini.Service.ahk)
         ahk_init((char*)"/mode_1");
-    //if(ini.Service.lua_script)
+    
+    if(ini.Service.lua_script)
         lua_init();
     rt_sem_release(sem_flash);
     rt_sem_release(sem_app_init);
@@ -455,115 +467,176 @@ void rt_thread_entry_app(void* parameter)
     key_cap_add(&cap_this2);
 
 
-    {
-        u8 buf[9]={0};
-        rt_mq_send (mq_commu, (void*)buf, 9);
-    }
+
 }
 u8 getkey()
 {
     return 0;
 }
-//#define  KBD_LEFT_CTRL                                  0x01
-//#define  KBD_LEFT_SHIFT                                 0x02
-//#define  KBD_LEFT_ALT                                   0x04
-//#define  KBD_LEFT_GUI                                   0x08
-//#define  KBD_RIGHT_CTRL                                 0x10
-//#define  KBD_RIGHT_SHIFT                                0x20
-//#define  KBD_RIGHT_ALT                                  0x40
-//#define  KBD_RIGHT_GUI                                  0x80
-//#ifndef FALSE
-//#define FALSE 0
-//#endif
+static   const  uint8_t  HID_KEYBRD_Codes[] = {
+    0,     0,    0,    0,   31,   50,   48,   33,
+    19,   34,   35,   36,   24,   37,   38,   39,       /* 0x00 - 0x0F */
+    52,    51,   25,   26,   17,   20,   32,   21,
+    23,   49,   18,   47,   22,   46,    2,    3,       /* 0x10 - 0x1F */
+    4,    5,    6,    7,    8,    9,   10,   11,
+    43,  110,   15,   16,   61,   12,   13,   27,       /* 0x20 - 0x2F */
+    28,   29,   42,   40,   41,    1,   53,   54,
+    55,   30,  112,  113,  114,  115,  116,  117,       /* 0x30 - 0x3F */
+    118,  119,  120,  121,  122,  123,  124,  125,
+    126,   75,   80,   85,   76,   81,   86,   89,       /* 0x40 - 0x4F */
+    79,   84,   83,   90,   95,  100,  105,  106,
+    108,   93,   98,  103,   92,   97,  102,   91,       /* 0x50 - 0x5F */
+    96,  101,   99,  104,   45,  129,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0x60 - 0x6F */
+    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0x70 - 0x7F */
+    0,    0,    0,    0,    0,  107,    0,   56,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0x80 - 0x8F */
+    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0x90 - 0x9F */
+    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0xA0 - 0xAF */
+    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0xB0 - 0xBF */
+    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0xC0 - 0xCF */
+    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,       /* 0xD0 - 0xDF */
+    58,   44,   60,  127,   64,   57,   62,  128        /* 0xE0 - 0xE7 */
+};
+static  const  int8_t  HID_KEYBRD_Key[] = {
+  '\0',  '`',  '1',  '2',  '3',  '4',  '5',  '6',
+  '7',  '8',  '9',  '0',  '-',  '=',  '\0', '\r',
+  '\t',  'q',  'w',  'e',  'r',  't',  'y',  'u', 
+  'i',  'o',  'p',  '[',  ']',  '\\',
+  '\0',  'a',  's',  'd',  'f',  'g',  'h',  'j',  
+  'k',  'l',  ';',  '\'', '\0', '\n',
+  '\0',  '\0', 'z',  'x',  'c',  'v',  'b',  'n', 
+  'm',  ',',  '.',  '/',  '\0', '\0',
+  '\0',  '\0', '\0', ' ',  '\0', '\0', '\0', '\0', 
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+  '\0',  '\0', '\0', '\0', '\0', '\r', '\0', '\0', 
+  '\0', '\0', '\0', '\0', '\0', '\0',
+  '\0',  '\0', '7',  '4',  '1',
+  '\0',  '/',  '8',  '5',  '2',
+  '0',   '*',  '9',  '6',  '3',
+  '.',   '-',  '+',  '\0', '\n', '\0', '\0', '\0', '\0', '\0', '\0',
+  '\0',  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+  '\0', '\0', '\0', '\0'
+};
 
-//#ifndef TRUE
-//#define TRUE 1
-//#endif
-//static void KEYBRD_Decode(uint8_t *pbuf)
-//{
-//  static  uint8_t   shift;
-//  static  uint8_t   keys[6];
-//  static  uint8_t   keys_new[6];
-//  static  uint8_t   keys_last[6];
-//  static  uint8_t   key_newest;
-//  static  uint8_t   nbr_keys;
-//  static  uint8_t   nbr_keys_new;
-//  static  uint8_t   nbr_keys_last;
-//  uint8_t   ix;
-//  uint8_t   jx;
-//  uint8_t   error;
-//  uint8_t   output;            
-//  
-////  STM_EVAL_LEDToggle(LED_Orange);  // added by "STM32"
-//  
-//  nbr_keys      = 0;
-//  nbr_keys_new  = 0;
-//  nbr_keys_last = 0;
-//  key_newest    = 0x00;
-//  
-//  
-//  /* Check if Shift key is pressed */                                                                         
-//  if ((pbuf[0] == KBD_LEFT_SHIFT) || (pbuf[0] == KBD_RIGHT_SHIFT)) {
-//    shift = TRUE;
-//  } else {
-//    shift = FALSE;
-//  }
-//  
-//  error = FALSE;
-//  
-//  /* Check for the value of pressed key */
-//  for (ix = 2; ix < 2 + KBR_MAX_NBR_PRESSED; ix++) {                       
-//    if ((pbuf[ix] == 0x01) ||
-//        (pbuf[ix] == 0x02) ||
-//          (pbuf[ix] == 0x03)) {
-//            error = TRUE;
-//          }
-//  }
-//  
-//  if (error == TRUE) {
-//    return;
-//  }
-//  
-//  nbr_keys     = 0;
-//  nbr_keys_new = 0;
-//  for (ix = 2; ix < 2 + KBR_MAX_NBR_PRESSED; ix++) {
-//    if (pbuf[ix] != 0) {
-//      keys[nbr_keys] = pbuf[ix];                                       
-//      nbr_keys++;
-//      for (jx = 0; jx < nbr_keys_last; jx++) {                         
-//        if (pbuf[ix] == keys_last[jx]) {
-//          break;
-//        }
-//      }
-//      
-//      if (jx == nbr_keys_last) {
-//        keys_new[nbr_keys_new] = pbuf[ix];
-//        nbr_keys_new++;
-//      }
-//    }
-//  }
-//  
-//  if (nbr_keys_new == 1) {
-//    key_newest = keys_new[0];
-//    
-//    if (shift == TRUE) {
-//      output =  HID_KEYBRD_ShiftKey[HID_KEYBRD_Codes[key_newest]];
-//    } else {
-//      output =  HID_KEYBRD_Key[HID_KEYBRD_Codes[key_newest]];
-//    }
-//    
-//    /* call user process handle */
-//    USR_KEYBRD_ProcessData(output);
-//  } else {
-//    key_newest = 0x00;
-//  }
-//  
-//  
-//  nbr_keys_last  = nbr_keys;
-//  for (ix = 0; ix < KBR_MAX_NBR_PRESSED; ix++) {
-//    keys_last[ix] = keys[ix];
-//  }
-//}
+static  const  int8_t  HID_KEYBRD_ShiftKey[] = {
+  '\0', '~',  '!',  '@',  '#',  '$',  '%',  '^',  '&',  '*',  '(',  ')',
+  '_',  '+',  '\0', '\0', '\0', 'Q',  'W',  'E',  'R',  'T',  'Y',  'U', 
+  'I',  'O',  'P',  '{',  '}',  '|',  '\0', 'A',  'S',  'D',  'F',  'G', 
+  'H',  'J',  'K',  'L',  ':',  '"',  '\0', '\n', '\0', '\0', 'Z',  'X',  
+  'C',  'V',  'B',  'N',  'M',  '<',  '>',  '?',  '\0', '\0',  '\0', '\0',
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0',    '\0', '\0', '\0', '\0', '\0',
+  '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'
+};
+#define  KBD_LEFT_CTRL                                  0x01
+#define  KBD_LEFT_SHIFT                                 0x02
+#define  KBD_LEFT_ALT                                   0x04
+#define  KBD_LEFT_GUI                                   0x08
+#define  KBD_RIGHT_CTRL                                 0x10
+#define  KBD_RIGHT_SHIFT                                0x20
+#define  KBD_RIGHT_ALT                                  0x40
+#define  KBD_RIGHT_GUI                                  0x80
+#define  KBR_MAX_NBR_PRESSED                            6
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+static void KEYBRD_Decode(uint8_t *pbuf)
+{
+  static  uint8_t   shift;
+  static  uint8_t   keys[6];
+  static  uint8_t   keys_new[6];
+  static  uint8_t   keys_last[6];
+  static  uint8_t   key_newest;
+  static  uint8_t   nbr_keys;
+  static  uint8_t   nbr_keys_new;
+  static  uint8_t   nbr_keys_last;
+  u8 i=0;
+  uint8_t   ix;
+  uint8_t   jx;
+  uint8_t   error;
+  uint8_t   output;            
+  
+  nbr_keys      = 0;
+  nbr_keys_new  = 0;
+  //nbr_keys_last = 0;
+  key_newest    = 0x00;
+                                                                       
+  if ((pbuf[0] == KBD_LEFT_SHIFT) || (pbuf[0] == KBD_RIGHT_SHIFT)) {
+    shift = TRUE;
+  } else {
+    shift = FALSE;
+  }
+  
+  error = FALSE;
+  
+  /* Check for the value of pressed key */
+  for (ix = 2; ix < 2 + KBR_MAX_NBR_PRESSED; ix++) {                       
+    if ((pbuf[ix] == 0x01) ||
+        (pbuf[ix] == 0x02) ||
+          (pbuf[ix] == 0x03)) {
+            error = TRUE;
+          }
+  }
+  
+  if (error == TRUE) {
+    return;
+  }
+  
+  nbr_keys     = 0;
+  nbr_keys_new = 0;
+  for (ix = 2; ix < 2 + KBR_MAX_NBR_PRESSED; ix++) {
+    if (pbuf[ix] != 0) {
+      keys[nbr_keys] = pbuf[ix];                                       
+      nbr_keys++;
+      for (jx = 0; jx < nbr_keys_last; jx++) {                         
+        if (pbuf[ix] == keys_last[jx]) {
+          break;
+        }
+      }
+      
+      if (jx == nbr_keys_last) {
+        keys_new[nbr_keys_new] = pbuf[ix];
+        nbr_keys_new++;
+      }
+    }
+  }
+  
+  for(i=0;i<nbr_keys_new;i++) {
+    key_newest = keys_new[i];
+    
+    if (shift == TRUE) {
+      output =  HID_KEYBRD_ShiftKey[HID_KEYBRD_Codes[key_newest]];
+    } else {
+      output =  HID_KEYBRD_Key[HID_KEYBRD_Codes[key_newest]];
+    }
+    
+    /* call user process handle */
+    
+
+    rt_mb_send(mb_app, (rt_uint32_t )output);
+
+  }
+  
+  
+  nbr_keys_last  = nbr_keys;
+  for (ix = 0; ix < KBR_MAX_NBR_PRESSED; ix++) {
+    keys_last[ix] = keys[ix];
+  }
+}
 
 
 
