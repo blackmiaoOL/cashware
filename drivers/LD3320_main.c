@@ -45,6 +45,7 @@ void mouse_data_clear()
     ms_data.y=0;
     ms_data.z=0;
 }
+    
 void LD_loop()
 {
     u8 mail[9];
@@ -52,7 +53,7 @@ void LD_loop()
 loop:
     if(nAsrStatus!=LD_ASR_RUNING)
     {
-        DBG("***%d****",nAsrStatus);
+        ld3320_print("***%d****",nAsrStatus);
         if(nAsrStatus==0x31)
         rt_thread_delay(1000);
     }
@@ -67,12 +68,12 @@ loop:
             if (RunASR()==0)	//	启动一次ASR识别流程：ASR初始化，ASR添加关键词语，启动ASR运算
             {
                 nAsrStatus = LD_ASR_ERROR;
-                DBG("init_false");
+                ld3320_print("init_false");
             }
             break;
         case LD_ASR_FOUNDOK:
             nAsrRes = LD_ReadReg(0xc5);	//	一次ASR识别流程结束，去取ASR最佳识别结果
-            DBG("\r\n识别码:");			 /*text.....*/
+            ld3320_print("\r\n识别码:");			 /*text.....*/
             putchar(nAsrRes+0x30); /*text.....*/
             mail[i]=0; 
             switch(nAsrRes)		   /*对结果执行相关操作,客户修改*/
@@ -80,7 +81,7 @@ loop:
                 #define clear_mail for(i=0;i<9;i++){mail[i]=0;}
                 case CODE_YMD:
                 {
-                    DBG("“xiaoxi识别成功\r\n"); 
+                    ld3320_print("“xiaoxi识别成功\r\n"); 
                     clear_mail;	
                     mail[1]=1;
                     rt_mq_send (mq_commu, mail,9);
@@ -97,7 +98,7 @@ loop:
                     break;
                 }
                 case CODE_QJ:			/*命令“前进”*/
-                    DBG("“前进”命令识别成功\r\n"); /*text.....*/
+                    ld3320_print("“前进”命令识别成功\r\n"); /*text.....*/
                     mail[0]=11;
                     mouse_data_clear();
                     ms_data.z=-3;
@@ -106,7 +107,7 @@ loop:
                 break;
                 //case CODE_SK:
                 case CODE_HT:	 /*命令“后退”*/
-                    DBG("“后退”命令识别成功\r\n"); /*text.....*/
+                    ld3320_print("“后退”命令识别成功\r\n"); /*text.....*/
                     mail[0]=11;
                     mouse_data_clear();
                     ms_data.z=3;
@@ -116,7 +117,7 @@ loop:
                     break;
                 case CODE_KNM:		/*命令“举手”*/
                 {
-                    DBG("看你妹命令识别成功\r\n"); /*text.....*/
+                    ld3320_print("看你妹命令识别成功\r\n"); /*text.....*/
                     for(i=0;i<9;i++)
                     {
                         mail[i]=0;
@@ -147,37 +148,37 @@ loop:
                 }
                 case CODE_A:
                 {
-                    DBG(toString(CODE_A)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_A)"命令识别成功\r\n");
                     break;
                 }
                 case CODE_B:
                 {
-                    DBG(toString(CODE_B)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_B)"命令识别成功\r\n");
                     break;
                 }
                 case CODE_C:
                 {
-                    DBG(toString(CODE_C)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_C)"命令识别成功\r\n");
                     break;
                 }
                 case CODE_D:
                 {
-                    DBG(toString(CODE_D)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_D)"命令识别成功\r\n");
                     break;
                 }
                 case CODE_E:
                 {
-                    DBG(toString(CODE_E)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_E)"命令识别成功\r\n");
                     break;
                 }
                 case CODE_F:
                 {
-                    DBG(toString(CODE_F)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_F)"命令识别成功\r\n");
                     break;
                 }
                 case CODE_G:
                 {
-                    DBG(toString(CODE_G)"命令识别成功\r\n");
+                    ld3320_print(toString(CODE_G)"命令识别成功\r\n");
                     break;
                 }
 
@@ -228,7 +229,7 @@ uint8 RunASR(void)
 		rt_thread_delay(10);
 		if (LD_AsrAddFixed()==0)	//添加关键词语到LD3320芯片中
 		{
-			DBG("\r\nerror0");
+			ld3320_print("\r\nerror0");
 			LD_reset();			//	LD3320芯片内部出现不正常，立即重启LD3320芯片
 			rt_thread_delay(10);			//	并从初始化开始重新ASR识别流程
 			continue;

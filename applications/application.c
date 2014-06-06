@@ -145,6 +145,8 @@ static char thread_ld3320_stack[3096];
 struct rt_thread thread_ld3320;
 static void rt_thread_entry_ld3320(void* parameter)
 {
+    if(!ini.Service.audio)
+        return ;
 	DBG("LD3320 Init_start\r\n");
     LD3320_main_Init();
 	DBG("LD3320 Init_end\r\n");
@@ -239,7 +241,7 @@ static void rt_thread_entry_usb(void* parameter)
         rt_thread_delay(3);       
 	} 
 }
-extern  char thread_app_stack[40196];
+extern  char thread_app_stack[10196];
 extern struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter);
 
@@ -261,7 +263,7 @@ void rt_thread_entry_init(void* parameter)
     
     ini_init();
     key_cap_Init();
-    blue_tooth_Init();
+    //blue_tooth_Init();
     commu_Init();
     OLED_dev=rt_device_find("OLED");
     if(OLED_dev!=RT_NULL)
@@ -283,26 +285,26 @@ void rt_thread_entry_init(void* parameter)
     cmd("Initializing~");
     
     
-    for(i=0;i<1;i++)
-    draw_bmp(i,63,"/background.bmp");
-    
-   // draw_bmp(0,43,"/24L01_1.bmp");
-    draw_bmp(26,43,"/icon/AHKScript.bmp");
-    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
-    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
-    draw_bmp(104,43,"/icon/micoff.bmp");
-    
-    draw_bmp(0,23,"/icon/MouseOff.bmp");
-    draw_bmp(26,23,"/icon/udisk_rd.bmp");
-    draw_bmp(52,23,"/icon/udisk_rd.bmp");
-    draw_bmp(78,23,"/icon/udisk_rd.bmp");
-    draw_bmp(104,23,"/icon/udisk_rd.bmp");
-    
-    draw_bmp(0,63,"/icon/udisk_rd.bmp");
-    draw_bmp(26,63,"/icon/udisk_rd.bmp");
-    draw_bmp(52,63,"/icon/udisk_rd.bmp");
-    draw_bmp(78,63,"/icon/udisk_rd.bmp");
-    draw_bmp(104,63,"/icon/udisk_rd.bmp");
+//    for(i=0;i<1;i++)
+//    draw_bmp(i,63,"/background.bmp");
+//    
+//   // draw_bmp(0,43,"/24L01_1.bmp");
+//    draw_bmp(26,43,"/icon/AHKScript.bmp");
+//    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
+//    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
+//    draw_bmp(104,43,"/icon/micoff.bmp");
+//    
+//    draw_bmp(0,23,"/icon/MouseOff.bmp");
+//    draw_bmp(26,23,"/icon/udisk_rd.bmp");
+//    draw_bmp(52,23,"/icon/udisk_rd.bmp");
+//    draw_bmp(78,23,"/icon/udisk_rd.bmp");
+//    draw_bmp(104,23,"/icon/udisk_rd.bmp");
+//    
+//    draw_bmp(0,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(26,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(52,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(78,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(104,63,"/icon/udisk_rd.bmp");
     
 }
 
@@ -352,17 +354,15 @@ int rt_application_init()
                    &thread_Flash_Read_stack[0],
             sizeof(thread_Flash_Read_stack),11,5);
     rt_thread_startup(&thread_Flash_Read);
+
+    rt_thread_init(&thread_ld3320,
+                   "ld3320",
+                   rt_thread_entry_ld3320,
+                   RT_NULL,
+                   &thread_ld3320_stack[0],
+            sizeof(thread_ld3320_stack),12,5);
+    rt_thread_startup(&thread_ld3320);
     
-    if(ini.Service.audio)
-    {
-        rt_thread_init(&thread_ld3320,
-                       "ld3320",
-                       rt_thread_entry_ld3320,
-                       RT_NULL,
-                       &thread_ld3320_stack[0],
-                sizeof(thread_ld3320_stack),12,5);
-        rt_thread_startup(&thread_ld3320);
-    }
     rt_thread_startup(&thread_init);
         
   //  Jacob_appinit();

@@ -14,7 +14,8 @@
 //#define uint8 unsigned char
 //#define uint16 unsigned int
 #define uint32 unsigned long
-
+#define ld3320_print(arg...) {do{if(ini.Debug.audio){DBG(arg);}else{ no_use_printf(arg);}}while(0);}
+#define ld3320_putchar(arg) {do{if(ini.Debug.audio){putchar(arg);}else{no_use_putchar(arg);}}while(0);}
 //	以下三个状态定义用来记录程序是在运行ASR识别还是在运行MP3播放
 #define LD_MODE_IDLE		0x00
 #define LD_MODE_ASR_RUN		0x08

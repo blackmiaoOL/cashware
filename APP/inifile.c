@@ -121,6 +121,7 @@ int  ini_init()
     READ_BOOL(ini,Service,mouse_gesture);
     READ_INT(ini,Service,first_mode);
     READ_BOOL(ini,Service,lua_script);
+    READ_BOOL(ini,Service,ultrasonic);
     READ_BOOL(ini,Debug,usb_init);
     READ_BOOL(ini,Debug,audio);
     READ_BOOL(ini,Debug,mouse);

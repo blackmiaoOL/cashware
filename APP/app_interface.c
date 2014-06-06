@@ -389,12 +389,21 @@ void  key_cap_add(cap* cap_this)
 
 }
 
+void ultrasonic_init()
+{
+    SCPE(PERIOA);
+    IOConfig(IOAB,PIN0,tuiwanshuchu);
+    IOConfig(IOAB,PIN1,xialashuru);
+    DBG("ultrasonic_init");
+    
+}
+
 void reset_system(struct st_key_cap* a)
 {
 NVIC_SystemReset();
 }
 ALIGN(RT_ALIGN_SIZE)
-char thread_app_stack[40196];
+char thread_app_stack[10196];
 struct rt_thread thread_app;
 void rt_thread_entry_app(void* parameter)
 {
@@ -413,9 +422,11 @@ void rt_thread_entry_app(void* parameter)
         key_remap_init();
     if(ini.Service.ahk)
         ahk_init((char*)"/mode_1");
-    
+        if(ini.Service.ultrasonic)
+        ultrasonic_init();
     if(ini.Service.lua_script)
         lua_init();
+
     rt_sem_release(sem_flash);
     rt_sem_release(sem_app_init);
     cmd("Done");
@@ -465,9 +476,14 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.filter=block.filter;
     cap_this2.key_exe=reset_system;
     key_cap_add(&cap_this2);
-
-
-
+//    while(1)
+//    {
+//        u32 i=0;
+//        i=ultrasonic_read();
+//        if(i)
+//            DBG("ultrasonic=%d\r\n",i);
+//        rt_thread_delay(200);
+//    }
 }
 u8 getkey()
 {

@@ -34,6 +34,7 @@ struct ini_service{
     bool mouse_gesture;
     int first_mode;
     bool lua_script;
+    bool ultrasonic;
     
 };
 
