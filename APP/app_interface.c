@@ -6,7 +6,16 @@
 #include "pwd.h"
 #include "lua_app.h"
 rt_device_t OLED_dev;
-
+/******************macro area******************/
+u8 macro_play_flag;
+void macro_play_prepare(cap * cap_this);
+static u8 macro_data[500][10];
+u8 macro_flag;
+u8 macro_lenth;
+void macro_record(u8*);
+void macro_set(cap * cap_this);
+bool macro_play(void);
+/******************macro area end******************/
 u8 read_buf[9000];
 u8 buf_out[9];
 void KEYBRD_Decode(uint8_t *pbuf);
@@ -18,6 +27,7 @@ cap key_cap_free[key_cap_cnt_all];
 cap* cap_use_head=RT_NULL;
 cap* cap_free_head=key_cap_free;
 rt_uint16_t key_cap_cnt=0;
+
 const u8  ascii2usb[]={
     0,0,0,0,  0,0,0,0,  0,0,0,0,  0,40,0,0, \
     0,0,0,0,  0,0,0,0,  0,0,0,0,  0,0,0,0, \
@@ -248,30 +258,34 @@ void press_string(cap * cap_this)
 {
     press_string_pure(cap_this->string,cap_this->string_lenth); 
 }
-bool key_capture(u8 *buf)
+bool key_handle(u8 *buf)
 {
     u8 i=0;
     static  u8 hotkey_flag=0;
     static  u8 hotkey_value=0;
     u8 control_key_this;
     bool result=true;
-    static u8 buf_pre[8];
-    //DBG("CNT=%d",key_cap_cnt);
-    //    for(i=0;i<8;i++)
-    //    {
-    //        DBG("%d\r\n",buf[i]);
-    //    }
-    //    DBG("%c",HID_KEYBRD_Key[HID_KEYBRD_Codes[buf[2]]]);
-    //    if(buf[0]&(1<<6))
-    //    {
-    //        buf[0]&=(0xff-(1<<6));W
-    //        buf[0]|=(1<<4) ;
-    //    }
-    //printf("buf[0]_raw=%d\r\n",buf[0]);
-
+    //static u8 buf_pre[8]={0};
+DBG("CNT=%d",key_cap_cnt);
+    for(i=0;i<8;i++)
+    {
+        DBG("%d\r\n",buf[i]);
+    }
+    //DBG("%c",HID_KEYBRD_Key[HID_KEYBRD_Codes[buf[2]]]);
+//    if(buf[0]&(1<<6))
+//    {
+//        buf[0]&=(0xff-(1<<6));W
+//        buf[0]|=(1<<4) ;
+//    }
+printf("buf[0]_raw=%d\r\n",buf[0]);
+   if(macro_flag)
+    {
+        macro_record(buf);
+    }
     
     buf[0]=key_process(buf[0]);//TODO
     control_key_this=buf[0];
+ 
     if(hotkey_flag)
     {
 
@@ -328,9 +342,22 @@ bool key_capture(u8 *buf)
         }
     }
 result:
-    for(i=0;i<8;i++)
-        buf_pre[i]=buf[i];
+//    for(i=0;i<8;i++)
+//        buf_pre[i]=buf[i];
     return result;
+}
+bool key_capture(u8 *buf)
+{
+    int retval;
+    retval=key_handle(buf);
+    if(macro_play_flag)
+    {
+        macro_play_flag=0;
+        return macro_play();
+
+    }
+    return retval;
+    
 }
 
 void blue_set(cap * cap_this)
@@ -422,7 +449,7 @@ void rt_thread_entry_app(void* parameter)
         key_remap_init();
     if(ini.Service.ahk)
         ahk_init((char*)"/mode_1");
-        if(ini.Service.ultrasonic)
+    if(ini.Service.ultrasonic)
         ultrasonic_init();
     if(ini.Service.lua_script)
         lua_init();
@@ -476,14 +503,29 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.filter=block.filter;
     cap_this2.key_exe=reset_system;
     key_cap_add(&cap_this2);
-//    while(1)
-//    {
-//        u32 i=0;
-//        i=ultrasonic_read();
-//        if(i)
-//            DBG("ultrasonic=%d\r\n",i);
-//        rt_thread_delay(200);
-//    }
+    
+    
+    
+    key_temp[0]=2;//right ctrl
+    key_temp[1]='^';
+    filter_Init(&filter);
+    filter_add(&filter,key_temp);
+    filter.key=ascii2usb['o'];
+    block.filter=filter;
+    cap_this2.filter=block.filter;
+    cap_this2.key_exe=macro_set;
+    key_cap_add(&cap_this2);
+    
+    key_temp[0]=2;//right ctrl
+    key_temp[1]='^';
+    filter_Init(&filter);
+    filter_add(&filter,key_temp);
+    filter.key=ascii2usb['i'];
+    block.filter=filter;
+    cap_this2.filter=block.filter;
+    cap_this2.key_exe=macro_play_prepare;
+    key_cap_add(&cap_this2);
+
 }
 u8 getkey()
 {
@@ -653,8 +695,56 @@ static void KEYBRD_Decode(uint8_t *pbuf)
     keys_last[ix] = keys[ix];
   }
 }
+void macro_record(u8 *data)
+{
+    int i=0;
+    for(i=0;i<10;i++)
+    {
+        macro_data[macro_lenth][i]=data[i];
+    }
+    macro_lenth++;
+}
+void macro_set(cap * cap_this)
+{
+    if(!macro_flag)
+    {
+        macro_flag=1;
+        macro_lenth=0;
+    }
+    else
+    {
+        macro_flag=0;
+        macro_lenth--;
+    } 
+}
+void macro_play_prepare(cap * cap_this)
+{
+    macro_play_flag=1;
+}
+bool macro_play()
+{
+    int i=0,j=0;
+    u8 mail[10];
+    macro_flag=0;
+    printf("play%d\r\n",macro_lenth);
+    for(i=0;i<macro_lenth;i++)
+    {
+        if(key_handle(macro_data[i]))
+        {
+            mail[0]=0;
+            for(j=0;j<8;j++)
+            {
+                mail[j+1]=macro_data[i][j];
+            }
+            mail[8]=92;
+            commu_send(mail,9); 
+        }
+        rt_thread_delay(10);
+    }
+   
 
-
+    return false;
+}
 
 
 

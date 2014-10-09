@@ -46,9 +46,9 @@ int main(void)
 	delay_ms(1000);			//等待初始化完成 
 	
 	
-	Mass_Memory_Size[0]=8000*512;
+	Mass_Memory_Size[0]=16000*512;
 	Mass_Block_Size[0] =512;
-	Mass_Block_Count[0]=8000;
+	Mass_Block_Count[0]=16000;
 	
 
 	while(1)

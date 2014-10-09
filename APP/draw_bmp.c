@@ -33,6 +33,7 @@ void num_change(u32 *num)
 }
 int draw_bmp(u16 x,u16 y,char *buf)
 {
+    
     FIL file; 
     u32 cnt=0;
     u32 i=0;
@@ -41,14 +42,14 @@ int draw_bmp(u16 x,u16 y,char *buf)
     u32 map_info_size;
     u8 err;
     
-    
     y=63-y;
     debug_en=1;
     rt_sem_take(sem_flash,RT_WAITING_FOREVER);
-    err=f_open(&file,(const char*)buf,FA_OPEN_EXISTING|FA_READ);
+    err=f_open(&file,(const char*)buf,FA_READ);
     if(err)
     {
         DBG("open err:%d\r\n",err);
+        rt_sem_release(sem_flash);
         return -1;
     }
    // if(x==0)

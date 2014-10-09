@@ -191,6 +191,7 @@ static void rt_thread_entry_Flash_Read(void* parameter)
         buf[0]=3;//read!
         rt_mq_send (mq_commu, (void*)buf, 9);//ask addr
         rt_sem_take(sem_commu,RT_WAITING_FOREVER);//addr gotton
+        
         if(flash_addr>=1000000)
         {
             buf[0]=5;
@@ -202,6 +203,7 @@ static void rt_thread_entry_Flash_Read(void* parameter)
         }
         else
         {
+          
             SPI_Flash_Read(flash_buf, flash_addr<<9, 512);
             buf[0]=4;
             rt_mq_send (mq_commu, (void*)buf, 9);
@@ -263,7 +265,7 @@ void rt_thread_entry_init(void* parameter)
     
     ini_init();
     key_cap_Init();
-    //blue_tooth_Init();
+    blue_tooth_Init();
     commu_Init();
     OLED_dev=rt_device_find("OLED");
     if(OLED_dev!=RT_NULL)
@@ -285,26 +287,26 @@ void rt_thread_entry_init(void* parameter)
     cmd("Initializing~");
     
     
-//    for(i=0;i<1;i++)
-//    draw_bmp(i,63,"/background.bmp");
-//    
-//   // draw_bmp(0,43,"/24L01_1.bmp");
-//    draw_bmp(26,43,"/icon/AHKScript.bmp");
-//    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
-//    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
-//    draw_bmp(104,43,"/icon/micoff.bmp");
-//    
-//    draw_bmp(0,23,"/icon/MouseOff.bmp");
-//    draw_bmp(26,23,"/icon/udisk_rd.bmp");
-//    draw_bmp(52,23,"/icon/udisk_rd.bmp");
-//    draw_bmp(78,23,"/icon/udisk_rd.bmp");
-//    draw_bmp(104,23,"/icon/udisk_rd.bmp");
-//    
-//    draw_bmp(0,63,"/icon/udisk_rd.bmp");
-//    draw_bmp(26,63,"/icon/udisk_rd.bmp");
-//    draw_bmp(52,63,"/icon/udisk_rd.bmp");
-//    draw_bmp(78,63,"/icon/udisk_rd.bmp");
-//    draw_bmp(104,63,"/icon/udisk_rd.bmp");
+    for(i=0;i<1;i++)
+    draw_bmp(i,63,"/background.bmp");
+    
+   // draw_bmp(0,43,"/24L01_1.bmp");
+    draw_bmp(26,43,"/icon/AHKScript.bmp");
+    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
+    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
+    draw_bmp(104,43,"/icon/micoff.bmp");
+    
+    draw_bmp(0,23,"/icon/MouseOff.bmp");
+    draw_bmp(26,23,"/icon/udisk_rd.bmp");
+    draw_bmp(52,23,"/icon/udisk_rd.bmp");
+    draw_bmp(78,23,"/icon/udisk_rd.bmp");
+    draw_bmp(104,23,"/icon/udisk_rd.bmp");
+    
+    draw_bmp(0,63,"/icon/udisk_rd.bmp");
+    draw_bmp(26,63,"/icon/udisk_rd.bmp");
+    draw_bmp(52,63,"/icon/udisk_rd.bmp");
+    draw_bmp(78,63,"/icon/udisk_rd.bmp");
+    draw_bmp(104,63,"/icon/udisk_rd.bmp");
     
 }
 

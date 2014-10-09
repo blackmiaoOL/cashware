@@ -2,7 +2,8 @@
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
-void delay_us2(int us)
+#include "usbh_hid_mouse.h"
+static void delay_us2(int us)
 {
     volatile int a,b;
     for(b=0;b<us;b++)
@@ -11,13 +12,13 @@ void delay_us2(int us)
         
     }
 }
-int lua_delay_ms(lua_State *L)
+static int lua_delay_ms(lua_State *L)
 {
     rt_thread_delay(lua_tonumber(L,1));
     return 0;
     
 }
-int ultrasonic_read(lua_State *L)
+static int ultrasonic_read(lua_State *L)
 {
     u32 time2=0;
     u32 cnt=0;
@@ -35,7 +36,8 @@ int ultrasonic_read(lua_State *L)
         if(cnt>14000)
         {
             rt_exit_critical();
-            return 0;
+            lua_pushnumber(L, 0);
+            return 1;
         }
             
     }
@@ -45,7 +47,8 @@ int ultrasonic_read(lua_State *L)
         if(time2>35000)
         {
             rt_exit_critical();
-            return 0;
+            lua_pushnumber(L, 0);
+            return 1;
         }
     }
     rt_exit_critical();
@@ -53,7 +56,24 @@ int ultrasonic_read(lua_State *L)
     lua_pushnumber(L, time2);
     return 1;
 }
-int putskey(lua_State *L)
+int lua_mouse_send(lua_State *L)
+{
+    mouse_data a;
+    u8 i=0;
+    u8 buf[9];
+    buf[0]=1;
+    a.button=lua_tonumber(L,1);
+    a.x=lua_tonumber(L,2);
+    a.y=lua_tonumber(L,3);
+    a.z=lua_tonumber(L,4);
+    for(i=0;i<8;i++)
+    {
+        buf[i+1]=((u8 *)&a)[i];
+    }
+    rt_mq_send(mq_commu,buf,9);
+    return 0;
+}
+static int putskey(lua_State *L)
 {
     int num=lua_gettop(L);
     int lenth=0;
@@ -102,7 +122,8 @@ void lua_init()
     read_buf[file.fsize]=0;
     lua_register(L, "putskey", putskey); 
     lua_register(L, "ultrasonic_read",ultrasonic_read);
-    lua_register(L, "lua_delay_ms",lua_delay_ms);
+    lua_register(L, "delay_ms",lua_delay_ms);
+    lua_register(L, "mouse_send",lua_mouse_send);
     thread_lua= rt_thread_create(
                    "lua",
                    rt_thread_entry_lua,

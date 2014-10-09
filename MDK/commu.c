@@ -61,9 +61,13 @@ void rt_thread_entry_commu(void* parameter)
         {
 
             static u8 release_flag=0;
-//            u8 i=0;
-//			for(i=0;i<9;i++)	
-//               DBG("i=%dmail=%d\r\n",i,mail[i]);
+            if(ini.Debug.mouse)
+            {
+                u8 i=0;
+                for(i=0;i<9;i++)	
+                    DBG("i=%dmail=%d\r\n",i,mail[i]);
+            }
+            
             mail[8]=90;
             if((mail[3]==124||mail[5]==240)&&mail[7]==255)
             {
