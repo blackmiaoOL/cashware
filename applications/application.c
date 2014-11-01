@@ -40,6 +40,7 @@ void cmd(u8* content);
 void commu_blue_send(u8* buf,u32 lenth);
 void delay_ms2(u32 ms);
 extern rt_mq_t mq_commu;
+extern rt_mq_t mq_lua;
 //rt_mq_t mq_commu;
 extern rt_sem_t sem_commu;
 extern rt_sem_t sem_app_init;
@@ -368,7 +369,7 @@ int rt_application_init()
     rt_thread_startup(&thread_init);
         
   //  Jacob_appinit();
-
+    mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
     mq_commu=rt_mq_create ("mq_commu", 9, 500, RT_IPC_FLAG_FIFO);
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
     sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);

@@ -5,6 +5,7 @@
 #include "inifile.h"
 #include "pwd.h"
 #include "lua_app.h"
+#include "commu.h"
 rt_device_t OLED_dev;
 /******************macro area******************/
 u8 macro_play_flag;
@@ -266,18 +267,23 @@ bool key_handle(u8 *buf)
     u8 control_key_this;
     bool result=true;
     //static u8 buf_pre[8]={0};
-DBG("CNT=%d",key_cap_cnt);
-    for(i=0;i<8;i++)
+    if(ini.Debug.keyboard)
     {
-        DBG("%d\r\n",buf[i]);
+        DBG("CNT=%d",key_cap_cnt);
+        for(i=0;i<8;i++)
+        {
+            DBG("%d\r\n",buf[i]);
+        }
+        printf("buf[0]_raw=%d\r\n",buf[0]);
     }
+
     //DBG("%c",HID_KEYBRD_Key[HID_KEYBRD_Codes[buf[2]]]);
 //    if(buf[0]&(1<<6))
 //    {
 //        buf[0]&=(0xff-(1<<6));W
 //        buf[0]|=(1<<4) ;
 //    }
-printf("buf[0]_raw=%d\r\n",buf[0]);
+
    if(macro_flag)
     {
         macro_record(buf);
@@ -308,6 +314,12 @@ printf("buf[0]_raw=%d\r\n",buf[0]);
             hotkey_flag=0;
         }
     }
+    if(lua_flag&LUA_KEYBOARD_ENABLE_MASK)
+    {
+        ((u8*)buf)[9]=1;//keyboard event
+        rt_mq_send (mq_lua, (void*)buf, 10);
+    }
+    
     if(mb_app!=0)
     {
         KEYBRD_Decode(buf);
@@ -397,7 +409,7 @@ void  key_cap_add(cap* cap_this)
     cap_new->key_exe=cap_this->key_exe;
     cap_new->string=cap_this->string;
     cap_new->string_lenth=cap_this->string_lenth;
-
+    cap_new->flag=cap_this->flag;
     if(key_cap_cnt==0)
     {
         cap_use_head=cap_new;
@@ -506,25 +518,25 @@ void rt_thread_entry_app(void* parameter)
     
     
     
-    key_temp[0]=2;//right ctrl
-    key_temp[1]='^';
-    filter_Init(&filter);
-    filter_add(&filter,key_temp);
-    filter.key=ascii2usb['o'];
-    block.filter=filter;
-    cap_this2.filter=block.filter;
-    cap_this2.key_exe=macro_set;
-    key_cap_add(&cap_this2);
-    
-    key_temp[0]=2;//right ctrl
-    key_temp[1]='^';
-    filter_Init(&filter);
-    filter_add(&filter,key_temp);
-    filter.key=ascii2usb['i'];
-    block.filter=filter;
-    cap_this2.filter=block.filter;
-    cap_this2.key_exe=macro_play_prepare;
-    key_cap_add(&cap_this2);
+//    key_temp[0]=2;//right ctrl
+//    key_temp[1]='^';
+//    filter_Init(&filter);
+//    filter_add(&filter,key_temp);
+//    filter.key=ascii2usb['o'];
+//    block.filter=filter;
+//    cap_this2.filter=block.filter;
+//    cap_this2.key_exe=macro_set;
+//    key_cap_add(&cap_this2);
+//    
+//    key_temp[0]=2;//right ctrl
+//    key_temp[1]='^';
+//    filter_Init(&filter);
+//    filter_add(&filter,key_temp);
+//    filter.key=ascii2usb['i'];
+//    block.filter=filter;
+//    cap_this2.filter=block.filter;
+//    cap_this2.key_exe=macro_play_prepare;
+//    key_cap_add(&cap_this2);
 
 }
 u8 getkey()

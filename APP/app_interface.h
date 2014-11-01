@@ -50,6 +50,7 @@ struct st_key_cap{
     struct st_key_cap* next;
     u16 *string;
     u16 string_lenth;
+    u8 flag;
 };
 typedef struct st_key_cap cap;
 extern cap key_cap_free[key_cap_cnt_all];
@@ -59,6 +60,7 @@ void buf_clear(void );
 #define press  rt_mq_send(mq_commu,buf_out,9) 
 extern const u8 key_string[key_string_num][key_stinrg_max_word];
 extern u8  key_changetable[8];
+void  key_cap_add(cap* cap_this);
 #endif//_APP_INTERFACE_H_
 
 

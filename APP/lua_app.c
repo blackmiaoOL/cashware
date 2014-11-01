@@ -3,6 +3,12 @@
 #include "lualib.h"
 #include "lauxlib.h"
 #include "usbh_hid_mouse.h"
+#include "ahk_analyser.h"
+static int lua_wait_event(lua_State *L);
+static int lua_flag_set(lua_State *L);
+rt_mq_t mq_lua;
+u32 lua_flag=0;//bit0:keyboard enable bit1:mouse enable 
+static int lua_key_register(lua_State *L);
 static void delay_us2(int us)
 {
     volatile int a,b;
@@ -73,7 +79,7 @@ int lua_mouse_send(lua_State *L)
     rt_mq_send(mq_commu,buf,9);
     return 0;
 }
-static int putskey(lua_State *L)
+static int key_put(lua_State *L)
 {
     int num=lua_gettop(L);
     int lenth=0;
@@ -120,21 +126,75 @@ void lua_init()
     printf("size=%d\r\n",file.fsize);
     f_close(&file);
     read_buf[file.fsize]=0;
-    lua_register(L, "putskey", putskey); 
+    lua_register(L, "flag_set",lua_flag_set);
+    lua_register(L, "key_register", lua_key_register); 
+    lua_register(L, "key_put", key_put); 
     lua_register(L, "ultrasonic_read",ultrasonic_read);
     lua_register(L, "delay_ms",lua_delay_ms);
     lua_register(L, "mouse_send",lua_mouse_send);
+    lua_register(L, "wait_event",lua_wait_event);
     thread_lua= rt_thread_create(
                    "lua",
                    rt_thread_entry_lua,
                    L,
-                   40024L,17,5);
+                   30024L,17,5);
     rt_thread_startup(thread_lua);
-    
-    
-    
-    
-    
+   
 }
+static int lua_wait_event(lua_State *L)
+{
+    u8 mail[10];
+    u8 i=0;
+    rt_mq_recv (mq_lua, mail,10, RT_WAITING_FOREVER);
+    for(i=0;i<10;i++)
+    {
+        lua_pushnumber(L, mail[i]);  
+    }
+    return 10;
+}
+static int lua_flag_set(lua_State *L)
+{    
+    int pos=lua_tointeger(L,1);
+    int value=lua_tointeger(L,2);
+    lua_flag&=(~(value<<pos));
+    lua_flag|=(value<<pos);
+    return 0;
+}    
+static void lua_send_mail(struct st_key_cap* key_cap)
+{
+    u8 buf[10];
 
+    buf[9]=key_cap->flag;
+    rt_mq_send (mq_lua, (void*)buf, 10);
+    DBG("lua_send_mail");
+}
+static int lua_key_register(lua_State *L)
+{
+    ctrl_filter filter;
+    cap  cap_this;
+    int num=lua_gettop(L);
+    int i=0;
+    int event=lua_tointeger(L,1);
+    DBG("EVENT=%d\n",event);
+    filter_Init(&filter);
+    filter.key=ascii2usb[lua_tostring(L, 2)[0]];
+    filter_add_string(&filter,lua_tostring(L, 3));
+    cap_this.filter=filter;
+    cap_this.key_exe=lua_send_mail;
+    cap_this.flag=(u8)event;
+    key_cap_add(&cap_this);
+    return 0;
+   // for(i=0;i<num;i)
+    
+//    key_temp[0]=2;//right ctrl
+//    key_temp[1]='^';
+    
+//    filter_add(&filter,key_temp);
+//    filter.key=ascii2usb['i'];
+//    block.filter=filter;
+//    cap_this2.filter=block.filter;
+//    cap_this2.key_exe=macro_play_prepare;
+//    key_cap_add(&cap_this2);
+   // 1<<control_key_index("lgui")
+}
 

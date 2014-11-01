@@ -48,7 +48,20 @@ u8 control_key_decode(u8 key)
     return 0xff;
 
 }
-
+u8 filter_add_string(struct control_key_filter* filter,const char *string )
+{
+    u8 key_value=1<<control_key_index(string);
+    filter->control_filter[filter->control_filter_cnt]=key_value;
+    if(filter->control_filter_cnt<7)
+    {
+        filter->control_filter_cnt++;
+    }
+    else
+    {
+        return 1;
+    }
+    return 0;
+}
 u8 filter_add(struct control_key_filter* filter,u8* filter_info)
 {
     u8 key_value=control_key_decode(filter_info[1]);

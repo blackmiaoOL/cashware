@@ -28,7 +28,7 @@ struct rt_thread thread_commu;
 extern u8 flash_buf[512];
 void rt_thread_entry_commu(void* parameter)
 {
-    u8 mail[9];
+    u8 mail[15];
 
     rt_sem_take(sem_app_init,RT_WAITING_FOREVER);
     while(1)
