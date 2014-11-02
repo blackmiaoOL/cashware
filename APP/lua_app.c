@@ -4,10 +4,11 @@
 #include "lauxlib.h"
 #include "usbh_hid_mouse.h"
 #include "ahk_analyser.h"
+#include "lstate.h"
 static int lua_wait_event(lua_State *L);
 static int lua_flag_set(lua_State *L);
 rt_mq_t mq_lua;
-u32 lua_flag=0;//bit0:keyboard enable bit1:mouse enable 
+u32 lua_flag=0;//bit0:keyboard enable bit1:mouse enable bit2:macro flag
 static int lua_key_register(lua_State *L);
 static void delay_us2(int us)
 {
@@ -79,7 +80,29 @@ int lua_mouse_send(lua_State *L)
     rt_mq_send(mq_commu,buf,9);
     return 0;
 }
-static int key_put(lua_State *L)
+static int lua_key_put_pure(lua_State *L)
+{
+    int num=lua_gettop(L);
+    u8 mail[15];
+    int i=0;
+//    printf("play%d\r\n",macro_lenth);
+    mail[0]=0;
+    for(i=1;i<num+1;i++)
+    {
+        mail[i]=lua_tointeger(L,i);
+    }
+        
+    if(key_handle(mail+1))
+    {
+        int j=0;
+        mail[8]=92;
+        commu_send(mail,9); 
+    }
+    rt_thread_delay(10);
+    
+    return 0;
+}
+static int lua_key_put(lua_State *L)
 {
     int num=lua_gettop(L);
     int lenth=0;
@@ -109,36 +132,57 @@ static int key_put(lua_State *L)
 }
 static void rt_thread_entry_lua(void* parameter)
 {
+    int ret=0;
     lua_State *L=(lua_State *)parameter;
-    luaL_dostring(L, (const char *)read_buf);
+    ret=luaL_dostring(L, (const char *)read_buf);
+    if ( ret != 0 )  
+     {  
+        int t = lua_type(L, -1);  
+        const char* err = lua_tostring(L,-1);  
+        printf("Error: %s\n", err);  
+        //lua_pop(L, 1);  
+     }
 }
+struct rt_thread thread_lua;
+u8 thread_lua_stack[20000L];
 void lua_init()
 {   
     FIL file;
-    rt_thread_t thread_lua;
+
     u32 cnt=0;
     lua_State *L  ;
     L = lua_open();      
     luaopen_base(L);  
-    
+      
+
+
     printf("open:%d",f_open(&file,"/profile.lua",FA_OPEN_EXISTING|FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA__WRITTEN));
     printf("read:%d",f_read(&file,read_buf,file.fsize,&cnt));
     printf("size=%d\r\n",file.fsize);
     f_close(&file);
     read_buf[file.fsize]=0;
+    lua_register(L, "key_put_pure",lua_key_put_pure);
     lua_register(L, "flag_set",lua_flag_set);
     lua_register(L, "key_register", lua_key_register); 
-    lua_register(L, "key_put", key_put); 
+    lua_register(L, "key_put", lua_key_put); 
     lua_register(L, "ultrasonic_read",ultrasonic_read);
     lua_register(L, "delay_ms",lua_delay_ms);
     lua_register(L, "mouse_send",lua_mouse_send);
     lua_register(L, "wait_event",lua_wait_event);
-    thread_lua= rt_thread_create(
-                   "lua",
+    luaL_checkstack (L, 150,"miaolegemi");
+    
+//    thread_lua= rt_thread_create(
+//                   "lua",
+//                   rt_thread_entry_lua,
+//                   L,
+//                   25024L,17,5);
+    rt_thread_init(&thread_lua,
+                   "2222",
                    rt_thread_entry_lua,
                    L,
-                   30024L,17,5);
-    rt_thread_startup(thread_lua);
+                   &thread_lua_stack[0],
+            sizeof(thread_lua_stack),17,5);
+    rt_thread_startup(&thread_lua);
    
 }
 static int lua_wait_event(lua_State *L)
@@ -150,14 +194,16 @@ static int lua_wait_event(lua_State *L)
     {
         lua_pushnumber(L, mail[i]);  
     }
+    DBG("gc:%d\n",LUA_GCCOUNT);
     return 10;
 }
 static int lua_flag_set(lua_State *L)
 {    
     int pos=lua_tointeger(L,1);
     int value=lua_tointeger(L,2);
-    lua_flag&=(~(value<<pos));
+    lua_flag&=(~(1<<pos));
     lua_flag|=(value<<pos);
+    DBG("flag=%d",lua_flag);
     return 0;
 }    
 static void lua_send_mail(struct st_key_cap* key_cap)
@@ -184,17 +230,6 @@ static int lua_key_register(lua_State *L)
     cap_this.flag=(u8)event;
     key_cap_add(&cap_this);
     return 0;
-   // for(i=0;i<num;i)
-    
-//    key_temp[0]=2;//right ctrl
-//    key_temp[1]='^';
-    
-//    filter_add(&filter,key_temp);
-//    filter.key=ascii2usb['i'];
-//    block.filter=filter;
-//    cap_this2.filter=block.filter;
-//    cap_this2.key_exe=macro_play_prepare;
-//    key_cap_add(&cap_this2);
-   // 1<<control_key_index("lgui")
+
 }
 

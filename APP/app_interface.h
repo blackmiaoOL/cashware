@@ -29,7 +29,7 @@ extern u8 blue_choose;
 extern const u8 shift_table[128];
 void cmd(u8* content);
 extern 	rt_device_t OLED_dev;
-extern u8 read_buf[9000];
+extern u8 read_buf[5000];
 typedef struct block_information block_info;
 struct control_key_filter
 {

@@ -10,14 +10,14 @@ rt_device_t OLED_dev;
 /******************macro area******************/
 u8 macro_play_flag;
 void macro_play_prepare(cap * cap_this);
-static u8 macro_data[500][10];
+static u8 macro_data[5][10];
 u8 macro_flag;
 u8 macro_lenth;
 void macro_record(u8*);
 void macro_set(cap * cap_this);
 bool macro_play(void);
 /******************macro area end******************/
-u8 read_buf[9000];
+u8 read_buf[5000];
 u8 buf_out[9];
 void KEYBRD_Decode(uint8_t *pbuf);
 void buf_clear(void);
@@ -362,12 +362,12 @@ bool key_capture(u8 *buf)
 {
     int retval;
     retval=key_handle(buf);
-    if(macro_play_flag)
-    {
-        macro_play_flag=0;
-        return macro_play();
+//    if(lua_flag&LUA_MACRO_PLAY_MASK)
+//    {
+//        lua_flag&=(~LUA_MACRO_PLAY_MASK);
+//        return macro_play();
 
-    }
+//    }
     return retval;
     
 }

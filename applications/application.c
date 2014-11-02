@@ -370,7 +370,7 @@ int rt_application_init()
         
   //  Jacob_appinit();
     mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
-    mq_commu=rt_mq_create ("mq_commu", 9, 500, RT_IPC_FLAG_FIFO);
+    mq_commu=rt_mq_create ("mq_commu", 9, 100, RT_IPC_FLAG_FIFO);
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
     sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);
     sem_app_init=rt_sem_create ("sem_init", 0, RT_IPC_FLAG_FIFO);

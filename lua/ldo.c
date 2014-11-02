@@ -52,6 +52,7 @@ void luaD_seterrorobj (lua_State *L, int errcode, StkId oldtop) {
   switch (errcode) {
     case LUA_ERRMEM: {
       ptrdiff_t oldtopr = savestack(L, oldtop);
+      
       setsvalue2s(L, restorestack(L, oldtopr), luaS_newliteral(L, MEMERRMSG));
       break;
     }

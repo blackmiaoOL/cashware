@@ -683,7 +683,9 @@ LUALIB_API int (luaL_loadstring) (lua_State *L, const char *s) {
 static int l_check_memlimit(lua_State *L, size_t needbytes) {
   global_State *g = G(L);
   int cycle_count = 0;
+    
   lu_mem limit = g->memlimit - needbytes;
+    printf("memlimit=%d ",g->memlimit);
   /* make sure the GC is not disabled. */
   if (!is_block_gc(L)) {
     while (g->totalbytes >= limit) {
@@ -694,8 +696,8 @@ static int l_check_memlimit(lua_State *L, size_t needbytes) {
   }
   return (g->totalbytes >= limit) ? 1 : 0;
 }
-
-
+typedef unsigned long                      rt_size_t; 
+void *rt_realloc(void *rmem, rt_size_t newsize);
 static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
   lua_State *L = (lua_State *)ud;
   int mode = L == NULL ? 0 : G(L)->egcmode;
@@ -714,11 +716,12 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
     if(G(L)->memlimit > 0 && (mode & EGC_ON_MEM_LIMIT) && l_check_memlimit(L, nsize - osize))
       return NULL;
   }
-  nptr = realloc(ptr, nsize);
+  nptr = rt_realloc((void *)ptr, nsize);
   if (nptr == NULL && L != NULL && (mode & EGC_ON_ALLOC_FAILURE)) {
     luaC_fullgc(L); /* emergency full collection. */
-    nptr = realloc(ptr, nsize); /* try allocation again */
+    nptr = rt_realloc(ptr, nsize); /* try allocation again */
   }
+  //printf("n=%d s=%d ",nptr,nsize);
   return nptr;
 }
 
