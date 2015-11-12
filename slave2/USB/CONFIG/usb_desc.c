@@ -360,7 +360,7 @@ const u8 Joystick_StringProduct[JOYSTICK_SIZ_STRING_PRODUCT] =
     JOYSTICK_SIZ_STRING_PRODUCT,          /* bLength */
     USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
     'S', 0, 'T', 0, 'M', 0, '3', 0, '2', 0, ' ', 0, 'J', 0,
-    'o', 0, 'y', 0, 's', 0, 't', 0, 'i', 0, 'c', 0, 'k', 0
+    'n', 0, 'y', 0, 's', 0, 't', 0, 'i', 0, 'c', 0, 'k', 0
   };
 u8 Joystick_StringSerial[JOYSTICK_SIZ_STRING_SERIAL] =
   {

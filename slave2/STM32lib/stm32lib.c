@@ -2,8 +2,7 @@
 #include "stm32lib.h"
 #include "stdio.h"
 #define bool			unsigned char
-#define true 			1
-#define false			0
+
 bool SCPE(u16 PE)//(SCPE(PERIOA))
 {
 	switch(PE/0X100)

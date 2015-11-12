@@ -26,263 +26,165 @@ ALIGN(RT_ALIGN_SIZE)
 char thread_commu_stack[1024];
 struct rt_thread thread_commu;
 extern u8 flash_buf[512];
-void rt_thread_entry_commu(void* parameter)
-{
-    u8 mail[15];
-
-    rt_sem_take(sem_app_init,RT_WAITING_FOREVER);
-    while(1)
-    {
-        rt_mq_recv (mq_commu, mail,9, RT_WAITING_FOREVER);
-        switch(mail[0])
-        {
-        case 0://keyborad send with cap
-        {
-//        	u8 i=0;
-//			for(i=0;i<9;i++)	
-//            DBG("i=%dmail=%d\r\n",i,mail[i]);
-            if(key_capture(mail+1))
-            {
-                mail[8]=92;
-                if(blue_choose)
-                {
-                    mail[0]=6;
-                    commu_blue_send(mail,9);
-                }
-                
-                else
-                {
-                   commu_send(mail,9); 
-                }
-            }
-            break;
-        }
-        case 1://mouse 
-        {
-
-            static u8 release_flag=0;
-            if(ini.Debug.mouse)
-            {
-                u8 i=0;
-                for(i=0;i<9;i++)	
-                    DBG("i=%dmail=%d\r\n",i,mail[i]);
-            }
-            
-            mail[8]=90;
-            if((mail[3]==124||mail[5]==240)&&mail[7]==255)
-            {
-                DBG("mouse error");
-                goto mouseend;
-            }
-            if(mail[1]==6)
-            {
-                mail[1]=1;
-                commu_blue_send(mail,9);
-                commu_send(mail,9); 
-                blue_choose=1-blue_choose;
-                
-                if(blue_choose)
-                    cmd("Blue remote");
-                else
-                {
-                    cmd("Blue closed");
-                }
-                release_flag=1;
-            }
-            else if(release_flag)
-            {
-                if(mail[1]==0)
-                {
-                    release_flag=0;
-                }   
-            }
-            else
-            {
-                if(mouse_capture(mail+1))
-                {
-                    
-                    if(blue_choose)
-                    {     
-                        commu_blue_send(mail,9);
-                    }
-                    else
-                    {
-                        mouse_code((mail+1));
-                        commu_send(mail,9); 
-                    }
-                }
-            }
-            mouseend:
-            
-            break;
-        }
-        case 3://read flash addr
-        {
-            u8 buf[4];
-            commu_recv(buf,4);
-            flash_addr=*((u32*)buf);
-            rt_sem_release(sem_commu);
-            break;
-        }
-        case 4://send flash content
-        {
-            commu_send(flash_buf,512);
-            rt_sem_release(sem_commu);
-            break;
-        }
-        case 5://receive flash content 
-        {
-            commu_recv(flash_buf,512);
-            rt_sem_release(sem_commu);
-            break;
-        }
-        case 6://keyborad send immediately
-        {
-            mail[8]=92;
-            if(blue_choose)
-            {
-                mail[0]=6;
-                commu_blue_send(mail,9);
-            }
-            else
-            {
-                mail[0]=0;
-               commu_send(mail,9); 
-            }
-            rt_thread_delay(10);
-            break;
-        }
-        case 10:
-        {
-            mail[8]=92;
-            mail[0]=6;
-            commu_blue_send(mail,9);
-            mail[0]=0;
-            commu_send(mail,9);
-            rt_thread_delay(10);  
-            break;
-        }
-        case 11://mouse direct
-        {
-//            u8 i=0;
-//			for(i=0;i<9;i++)	
-//               DBG("i=%dmail=%d\r\n",i,mail[i]);
-            mail[0]=1;
-            mouse_code((mail+1));
-            if(blue_choose)
-            {     
-                commu_blue_send(mail,9);
-            }
-            else
-            {
-                commu_send(mail,9); 
-            }
-            break;
-        }
-        }
-        rt_thread_delay(1);
-    }
-
-
-}
-
 u8 commu_send_byte(u8 info);
 
-//#define RW_H    IO1(IOCB,PIN12)//H:R L:W
-//#define RW_L    IO0(IOCB,PIN12)
-#define CLK_H   IO1(IOBB,PIN9)
-#define CLK_L   IO0(IOBB,PIN9)
-#define FINISH_FLAG    PBin(8)
 
-#define DATA_W(data)    do{IOBB->ODR&=0XFF00;IOBB->ODR|=(0X00ff&data);}while(0)
-#define DATA_R  (IOBB->IDR&=0XFF)
+#define IRQ_L IO0(IOCB,PIN9)
+#define IRQ_H IO1(IOCB,PIN9)
+
+#define SPI_STATE_WAIT 0
+#define SPI_STATE_SEND_WAIT 1
+#define SPI_STATE_SEND_CONTENT 2
+
+
+static u8 spi_state;
+static u32 spi_send_len;
+static u8 *spi_send_buf;
 void commu_Init()
 {
-	GPIO_InitTypeDef GPIO_InitStructure0;
-	SPI_InitTypeDef  SPI_InitStructure;
-
-  
+	GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    SPI_InitTypeDef SPI_InitStruct;
     
-	SCPE(PERIOB);
-	SCPE(PERIOA);
-    IOConfig(IOBB,PIN2|PIN6|PIN7,fukongshuru);
-	GPIO_PinAFConfig(IOBB, 3, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(IOBB, 4, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(IOBB, 5, GPIO_AF_SPI1);
+    SCPE(PERIOA);
+    SCPE(PERIOC);
+    SCPE(PERSPI3);
 
-	GPIO_InitStructure0.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure0.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure0.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure0.GPIO_PuPd  = GPIO_PuPd_DOWN;
-
-
-
-	GPIO_InitStructure0.GPIO_Pin=PIN3;
-	GPIO_Init(GPIOB, &GPIO_InitStructure0);
-	GPIO_InitStructure0.GPIO_Pin=PIN4;
-	//IOConfig(IOBB,PIN4,fukongshuru);
-	GPIO_Init(GPIOB, &GPIO_InitStructure0);
-	GPIO_InitStructure0.GPIO_Pin=PIN5;
-	GPIO_Init(GPIOB, &GPIO_InitStructure0);
-	
-
-	
-	IOConfig(IOAB,PIN15,tuiwanshuchu);
-	IO1(IOAB,PIN15);
-
-	SCPE(PERSPI1);
-
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
-
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStructure.SPI_CRCPolynomial = 7;
-	SPI_Init(SPI1, &SPI_InitStructure);
-
-	SPI_Cmd(SPI1, ENABLE);
-	
-
-
-
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+    // enable clock for used IO pins
+    
+    /* configure pins used by SPI3
+     * PC10 = SCK
+     * PC11 = MISO
+     * PC12 = MOSI
+	 * PA15 = NSS
+	 * PC9  = slave has info
+     */
+    IOConfig(IOCB,PIN9,tuiwanshuchu);
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOC, &GPIO_InitStruct);
+    IRQ_L;
+    
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_15;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+    GPIO_Init( GPIOA, &GPIO_InitStructure );
+    
+    
+    
+    
+    
+    // connect SPI3 pins to SPI alternate function
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_SPI3);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_SPI3);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_SPI3);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource15,GPIO_AF_SPI3);
+    
+    
+    SPI_I2S_ITConfig(SPI3, SPI_I2S_IT_RXNE, ENABLE);
+    SPI_I2S_ITConfig(SPI3, SPI_I2S_IT_TXE, ENABLE);
+    
+    
+    
+    // enable clock for used IO pins
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    
+    NVIC_InitTypeDef NVIC_InitStructure;
+    
+    NVIC_InitStructure.NVIC_IRQChannel = SPI3_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;//refer platform_config.h
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    
+    
+    SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex; // set to full duplex
+    SPI_InitStruct.SPI_Mode = SPI_Mode_Slave;     // transmit in slave mode, NSS pin has
+    SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b; // one packet of data is 8 bits wide
+    SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;        // clock is low when idle
+    SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;      // data sampled at first edge
+    SPI_InitStruct.SPI_NSS = SPI_NSS_Hard; // set the NSS HARD
+    SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4; // SPI frequency is
+    SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;// data is transmitted MSB first
+    SPI_Init(SPI3, &SPI_InitStruct);
+    SPI_Cmd(SPI3, ENABLE); // enable SPI3
+    
+    
 }
-#define FPGA_CS_L IO0(IOAB,PIN15)
-#define FPGA_CS_H IO1(IOAB,PIN15)
-// void commu_send_byte_half (u8 info);
-
-u8 commu_send_byte(u8 info)
+#define SPI_STATE_WAIT 0
+#define SPI_STATE_SEND_WAIT 1
+#define SPI_STATE_SEND_CONTENT 2
+//static u8 spi_state;
+//static u32 spi_send_len;
+//static u8 *spi_send_buf;
+void commu_send(u8* buf,u32 len)
 {
-
-//    commu_send_byte_half(info);
-//	commu_send_byte_half(info<<4);
-
-	int j;
-	u8 data=0;
-
-   FPGA_CS_L;
-  /*!< Loop while DR register in not emplty */
-  while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-
-  /*!< Send Half Word through the sFLASH peripheral */
-  SPI_I2S_SendData(SPI1, info);
-
-  /*!< Wait to receive a Half Word */
-  while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
-   FPGA_CS_H;
-  /*!< Return the Half Word read from the SPI bus */
-
-		for(j=0;j<100;j++);
-
-  data=SPI_I2S_ReceiveData(SPI1);
- // DBG("%c-%c",info,data);
-  return data;
-
+    u32 i=0;
+	spi_state=SPI_STATE_SEND_WAIT;
+	spi_send_buf=buf;
+	spi_send_len=len;
+	IRQ_H;
+//	while(spi_state!=SPI_STATE_WAIT);
 	
 }
+
+
+// void commu_send_byte_half (u8 info);
+void SPI3_IRQHandler(void)
+{
+    unsigned char rx;	
+    static u32  cnt = 0;
+//	rt_kprintf("irq");
+    if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_TXE) == SET)
+    {
+//		rt_kprintf("send");
+		if(spi_state==SPI_STATE_SEND_WAIT)
+		{
+			SPI3->DR=0x3E;// start
+			spi_state=SPI_STATE_SEND_CONTENT;
+			cnt=0;
+		}else if(spi_state==SPI_STATE_SEND_CONTENT)
+		{
+			if(cnt==0)
+			{
+				SPI3->DR=spi_send_len>>8;
+				
+			}else if(cnt==1)
+			{
+				SPI3->DR=spi_send_len%8;
+			}else
+			{
+				SPI3->DR=spi_send_buf[cnt-2];
+			}
+			
+			cnt++;
+			if(cnt==spi_send_len+2)
+			{
+				spi_state=SPI_STATE_WAIT;
+				rt_kprintf("irqend");
+				IRQ_L;
+			}
+		}else{
+			SPI3->DR=0x8c;// nothing
+		}
+    }
+    if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_RXNE) == SET)
+    {
+        //        Slave_rev_buff[i] = SPI3->DR ;
+        //        i++ ;
+        rt_kprintf("%X ",SPI3->DR);       
+    }    
+}
+
+
 // void commu_send_byte_half(u8 info)
 //{
 //    volatile int cnt=0;
@@ -309,37 +211,19 @@ void blue_putchar(u8 ch);
 void commu_blue_send(u8* buf,u32 lenth)
 {
     u32 i=0;
-   // blue_putchar(7<<4);
+    // blue_putchar(7<<4);
     for(i=0;i<lenth;i++)
-	{
-		blue_putchar(buf[i]);
+    {
+        blue_putchar(buf[i]);
         rt_thread_delay(1);
-	}
+    }
 }
-void commu_send(u8* buf,u32 lenth)
-{
-	u32 i=0;
-	//END_L;
-//    RW_L;//W
-//    CLK_H;
-	//commu_send_byte_half(7<<4);
-	if(lenth==512)
-	{
-		commu_send_byte(11<<4);
-	}
-	else
-		commu_send_byte(7<<4);
-	for(i=0;i<lenth;i++)
-	{
-		commu_send_byte(buf[i]);
-		//delay_ms2(10);
-	}	
-}
-void commu_recv_byte_half(u8* data);
- void commu_recv_byte(u8* data)
-{
-	*data=commu_send_byte(0x12);
 
+void commu_recv_byte_half(u8* data);
+void commu_recv_byte(u8* data)
+{
+//    *data=commu_send_byte(0x12);
+    
 }
 
 //void commu_recv_byte_half(u8* data)
@@ -370,20 +254,20 @@ void commu_recv_byte_half(u8* data);
 
 void commu_recv(u8* buf,u32 lenth)
 {
-    u32 i=0;
-
-	if(lenth==512)
-	{
-		commu_send_byte(12<<4);
-	}
-	else
-    commu_send_byte(9<<4);
-commu_send_byte(12);
-    for(i=0;i<lenth;i++)
-    {
-        commu_recv_byte(buf+i);
-		
-    }
-
+//    u32 i=0;
+//    
+//    if(lenth==512)
+//    {
+//        commu_send_byte(12<<4);
+//    }
+//    else
+//        commu_send_byte(9<<4);
+//    commu_send_byte(12);
+//    for(i=0;i<lenth;i++)
+//    {
+//        commu_recv_byte(buf+i);
+//        
+//    }
+    
 }
 

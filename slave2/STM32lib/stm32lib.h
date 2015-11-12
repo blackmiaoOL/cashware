@@ -128,5 +128,11 @@ long atoi(char*);
 
 #define IOout(GPIO_BASE,n,v) ((v)?(GPIO_BASE->ODR|=(1<<(n))):(GPIO_BASE->ODR&=(0xffff-(1<<(n)))))
 #define IOin(GPIO_BASE,n) ((GPIO_BASE->IDR&(1<<(n)))>0)
+	#ifndef true
+		#define true 1
+	#endif
+		#ifndef false
+		#define false 0
+	#endif
 #endif
 

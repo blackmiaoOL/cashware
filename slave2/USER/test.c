@@ -9,6 +9,8 @@
 #include "usb_process.h"
 #include "mass_mal.h"
 #include "keyboard.h"
+#include "commu.h"
+#include "w25q16.h"
 extern u8 EP1BUSY;			//键盘数据发送忙标志 
 extern u8 EP2BUSY;			//鼠标数据发送忙标志
 extern u8 INIT_OK;
@@ -29,7 +31,7 @@ u8 buf_try[]={0,0,20,0,0,0,0,0};
 
 int main(void)
 {
-	u32 i=0;
+//	u32 i=0;
 
 	Stm32_Clock_Init(9);//系统时钟设置
 	delay_init(72);		//延时初始化
@@ -37,23 +39,37 @@ int main(void)
 	//USB配置
 	  
 	
-	JTAG_Set(1);
-  delay_ms(20);		
+	JTAG_Set(1);//for free JTAG pins
+  delay_ms(200);		
   
-	
-	
+	SPI_Flash_Init(); 
+	commu_init();
+	while(SPI_Flash_ReadID()!=W25Q16)							//岇测不禍W25Q64
+	{
+		printf("error%X\r\n",SPI_Flash_ReadID());
+		delay_ms(500);
+
+	}
 	Set_USBClock();
 	USB_Interrupts_Config();  
 	USB_Init();	
 //	delay_ms(1000);			//等待初始化完成 
 //	printf("start");
 	
-	Mass_Memory_Size[0]=16000*512;
+	Mass_Memory_Size[0]=4000*512;
 	Mass_Block_Size[0] =512;
-	Mass_Block_Count[0]=16000;
-	keyboard_init();
+	Mass_Block_Count[0]=4000;
+//	keyboard_init();
 	while(1){
-//		delay_ms(1000);	
+		printf("start");
+//		commu_write("miao",5);
+		u32 len;
+		u8 *buf=commu_read(&len);
+		printf(" len=%d",len);
+		for(u32 i=0;i<len;i++){
+			printf("%X ",buf[i]);
+		}
+		delay_ms(1000);	
 //		delay_ms(1000);	
 //		delay_ms(1000);	
 //		delay_ms(1000);	

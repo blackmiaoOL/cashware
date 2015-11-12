@@ -97,14 +97,14 @@ void rt_hw_board_init()
     SysTick_Configuration();
     delay_ms2(2);
     rt_hw_usart_init();
-    
-    
-    
-    rt_hw_LED_init();
-    rt_hw_OLED_init();
-    LD3320_GPIO_Cfg();
+    rt_kprintf("- RT -     Thread Operating System\n");
+//    
+//    
+//    rt_hw_LED_init();
+//    rt_hw_OLED_init();
+//    LD3320_GPIO_Cfg();
     delay_ms2(2);
-    SPI_Flash_Init();
+//    SPI_Flash_Init();
     delay_ms2(2);
 #ifdef RT_USING_CONSOLE
     rt_console_set_device(CONSOLE_DEVICE);

@@ -60,7 +60,7 @@ void keyboard_init(void){
 	while(i<sizeof(cols)-1){
 		struct GPIO_struct* io=&keyboard_gpio_cols[cnt];		
 		io->port=char2port(cols[i]);
-		printf(" p:%c",cols[i]);
+//		printf(" p:%c",cols[i]);
 		i++;
 		long num=atoi(cols+i);
 		io->pin=1<<(num%8*4);
@@ -71,7 +71,7 @@ void keyboard_init(void){
 		}
 		i++;
 		delay_ms(10);
-		printf(" n:%ld %ld\r\n",io->pin,io->num);
+//		printf(" n:%ld %ld\r\n",io->pin,io->num);
 		delay_ms(10);
 		cnt++;
 	}
@@ -91,7 +91,7 @@ void keyboard_init(void){
 		}
 		i++;
 		delay_ms(10);
-		printf(" n:%d %d\r\n",io->pin,io->num);
+//		printf(" n:%d %d\r\n",io->pin,io->num);
 		delay_ms(10);
 		cnt++;
 	}
@@ -130,7 +130,7 @@ GPIO_TypeDef* char2port(char ch){
     default:
         printf("wrong port!!!\n");
         return (GPIO_TypeDef*)GPIOA;
-        break;
+
     }
 }
 u32 str2pin(char *str){
@@ -160,7 +160,7 @@ static void scan(){
             key_val[j]+=((val>0)<<i);
 //					delay_ms(1);
         }
-				printf("\r\n");
+//				printf("\r\n");
 //				delay_ms(1);
         u16 mask=1<<COL_LEN;
         mask--;
@@ -169,7 +169,7 @@ static void scan(){
     }
 
     for(j=0;j<ROW_LEN;j++){
-        printf("key value %d %3d",j,key_val[j]);
+//        printf("key value %d %3d",j,key_val[j]);
     }
 //		delay_ms(200);
 
@@ -219,7 +219,7 @@ static void scan(){
                 default:
                     key_buf.key[key_data_index++] = key_index[j][i];
                 }
-                printf("key press %d  %d %d\n",j,i, key_index[j][i]);
+//                printf("key press %d  %d %d\n",j,i, key_index[j][i]);
                 pre_press=1;
                 key_press=1;
                 if(key_data_index==6){

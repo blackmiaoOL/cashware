@@ -310,12 +310,34 @@ void rt_thread_entry_init(void* parameter)
     draw_bmp(104,63,"/icon/udisk_rd.bmp");
     
 }
-
-
+static char thread_commu_read_stack[1024];
+struct rt_thread thread_commu_read;
+void rt_thread_entry_commu(void* parameter){
+	rt_thread_delay(300);  
+	commu_Init();
+	commu_send("miaowu",6);
+	while(1){
+		delay_ms2(1000);
+	}
+}
 int rt_application_init()
 {
     
     
+	
+	rt_thread_init(&thread_commu_read,
+                   "commu",
+                   rt_thread_entry_commu,
+                   RT_NULL,
+                   &thread_commu_read_stack[0],
+            sizeof(thread_commu_read_stack),11,5);
+    rt_thread_startup(&thread_commu_read);
+	return 0;
+	while(1){
+
+		delay_ms2(3000);
+	}
+	while(1);
     rt_thread_init(&thread_init,
                    "init",
                    rt_thread_entry_init,

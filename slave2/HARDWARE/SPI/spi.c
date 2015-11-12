@@ -1,4 +1,5 @@
 #include "spi.h"
+#include "stm32lib.h"
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
 //Mini STM32开发板
@@ -16,16 +17,66 @@
 //以下是SPI模块的初始化代码，配置成主机模式，访问SD Card/W25X16/24L01/JF24C							  
 //SPI口初始化
 //这里针是对SPI1的初始化
+static u8 initted=0;
+void SPIx_slave_Init(void){
+	
+//	IOConfig(IOBB,low,PIN5,4);
+//	IOConfig(IOBB,low,PIN4,0xb);
+//	IOConfig(IOAB,high,PIN15,4);
+//	IOConfig(IOBB,low,PIN6,3);
+//	PBout(6)=0;
+	RCC->APB2ENR|=1<<2;       //PORTA时钟使能 	 
+	RCC->APB2ENR|=1<<12;      //SPI1时钟使能 
+		RCC->APB2ENR|=1<<0;     //开启辅助时钟   
+	//这里只针对SPI口初始化
+//	GPIOA->CRL&=0X0f0FF000; 
+//	GPIOA->CRL|=0XB0B00BBB;//PA5.6.7复用
+	IOConfig(IOAB,0,PIN5,0X0B);
+	IOConfig(IOAB,0,PIN6,0X0B);
+	IOConfig(IOAB,0,PIN7,0X0B);
+	
+		   
+	AFIO->MAPR&=0XFFFFFFFE; //清除MAPR的[11:10]
+	AFIO->MAPR|=1<<0;      //部分重映像,TIM3_CH2->PB5
+	
+	SPI1->CR1=0;
+	SPI1->CR1|=0<<10;//全双工模式	
+	SPI1->CR1|=0<<9; //软件nss管理
+	//SPI1->CR1|=1<<8;  
+
+	SPI1->CR1|=0<<2; //SPI slave
+	SPI1->CR1|=0<<11;//8bit数据格式	
+	//对24L01要设置 CPHA=0;CPOL=0;
+	
+	SPI1->CR1|=1<<1; //空闲模式下SCK为1 CPOL=1			   
+	SPI1->CR1|=1<<0; //第一个时钟的下降沿,CPHA=1 CPOL=1	   
+	SPI1->CR1|=0<<3; //Fsck=Fcpu/256
+	SPI1->CR1|=0<<7; //MSBfirst   
+	SPI1->CR2|=1<<6;  
+	MY_NVIC_Init(0,0,SPI1_IRQChannel,2); 
+	SPI1->CR1|=1<<6; //SPI设备使能
+  SPIx_SetSpeed(SPI_SPEED_256);
+}
 void SPIx_Init(void)
 {	 
+	if(!initted){
+		initted=true;
+	}else{
+		return;
+	}
+	
 	RCC->APB2ENR|=1<<2;       //PORTA时钟使能 	 
 	RCC->APB2ENR|=1<<12;      //SPI1时钟使能 
 		   
 	//这里只针对SPI口初始化
-	GPIOA->CRL&=0X000FFFFF; 
-	GPIOA->CRL|=0XBBB00000;//PA5.6.7复用 	    
+//	GPIOA->CRL&=0X0f0FF000; 
+//	GPIOA->CRL|=0XB0B00BBB;//PA5.6.7复用
+	IOConfig(IOAB,0,PIN5,0X0B);
+	IOConfig(IOAB,0,PIN6,0X0B);
+	IOConfig(IOAB,0,PIN7,0X0B);
+	
 	GPIOA->ODR|=0X7<<5;    //PA5.6.7上拉
-		
+	SPI1->CR1=0;	
 	SPI1->CR1|=0<<10;//全双工模式	
 	SPI1->CR1|=1<<9; //软件nss管理
 	SPI1->CR1|=1<<8;  
@@ -40,6 +91,7 @@ void SPIx_Init(void)
 	SPI1->CR1|=0<<7; //MSBfirst   
 	SPI1->CR1|=1<<6; //SPI设备使能
 	SPIx_ReadWriteByte(0xff);//启动传输		 
+	
 }   
 //SPI 速度设置函数
 //SpeedSet:
