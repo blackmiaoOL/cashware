@@ -190,7 +190,7 @@ void USART1_IRQHandler(void)
     rt_interrupt_leave();
 #endif
 }
-
+extern u32 test_data;
 void USART2_IRQHandler(void)
 {
 #ifdef RT_USING_UART2
@@ -199,9 +199,14 @@ void USART2_IRQHandler(void)
 
     /* enter interrupt */
     rt_interrupt_enter();
-
-    rt_hw_serial_isr(&uart2_device);
-
+	
+//    rt_hw_serial_isr(&uart2_device);
+//	rt_kprintf("%X",USART2->SR);
+	
+	if(USART2->SR&(1<<5))//接收到数据
+	{	 
+		test_data=USART2->DR;
+	}
     /* leave interrupt */
     rt_interrupt_leave();
 #endif

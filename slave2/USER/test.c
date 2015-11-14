@@ -43,7 +43,7 @@ int main(void)
 	delay_ms(200);		
   
 	SPI_Flash_Init(); 
-	commu_init();
+//	commu_init();
 	while(SPI_Flash_ReadID()!=W25Q16)							//Œì²â²»µœW25Q64
 	{
 		printf("error%X\r\n",SPI_Flash_ReadID());
@@ -62,27 +62,27 @@ int main(void)
 	keyboard_init();
 	while(1){
 	keyboard_scan();
-//		commu_write("miao",5);
-		u32 len;
-		u8 *buf=commu_read(&len);
-		
-		printf(" l %d ",len);
-		if(len>512){
-			len=512;
-		}
-		for(u32 i=0;i<len;i++){
-			printf("%c",buf[i],buf[i]);
-//			delay_ms(1);
-		}
-		printf("\r\n");
-		delay_ms(100);
-		commu_write("woierwlne",6);
-		delay_ms(100);
-//		delay_ms(1000);	
-//		delay_ms(1000);	
-//		delay_ms(1000);	
-//		delay_ms(1000);	
-//		keyborad_process(buf_try);
+////		commu_write("miao",5);
+//		u32 len;
+////		u8 *buf=commu_read(&len);
+//		
+//		printf(" l %d ",len);
+//		if(len>512){
+//			len=512;
+//		}
+//		for(u32 i=0;i<len;i++){
+//			printf("%c",buf[i],buf[i]);
+////			delay_ms(1);
+//		}
+//		printf("\r\n");
+//		delay_ms(100);
+////		commu_write("woierwlne",6);
+//		delay_ms(100);
+////		delay_ms(1000);	
+////		delay_ms(1000);	
+////		delay_ms(1000);	
+////		delay_ms(1000);	
+////		keyborad_process(buf_try);
 	}
 
 //	while(1)

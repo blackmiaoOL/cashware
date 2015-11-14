@@ -91,46 +91,27 @@ void commu_init()
 
 void USART1_IRQHandler(void)
 {
-//	u8 res;	
+	u8 res;	
 //	
-	if(USART1->SR&(1<<5));//接收到数据
-//	{	 
-//		res=USART1->DR; 
-//  	
-//		if(commu_flag==2)
-//		{
-//			if(res=='s')
-//			{
-//				commu_flag=0;
-//			}
-//		}
-//		else 
-//		{
-//			if(commu_lenth==8)
-//			{
-//				commu_buf[commu_lenth++]=res;
-//				commu_flag=1;
-//			}
-//			else
-//			{
-//				commu_buf[commu_lenth++]=res;
-//			}
-//			
-//			
-//		}
-//	}
-	//putchar('s');
+	static u8 cnt=0;
+	if(USART1->SR&(1<<5))//接收到数据
+	{	 
+		res=USART1->DR; 
+		cnt++;
+		if(cnt%2==0)
+		putchar(res);
+	}
 } 
 
 u8 SD_ReadDisk(u8* buf,u32 sector,u32 cnt)		//读块  512
 {
-	printf("read %X ",sector);
+	printf("r%X ",sector);
 	SPI_Flash_Read(buf,sector*512,cnt*512);
 	return 0;
 }
 u8 SD_WriteDisk(u8*buf,u32 sector,u32 cnt)		//写块   512 
 {
-	printf("write %X ",sector);
+	printf("r%X ",sector);
 	SPI_Flash_Write(buf,sector*512,cnt*512);
 	return 0;
 }

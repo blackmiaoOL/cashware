@@ -64,7 +64,7 @@ void SPI_Flash_Init(void)
 //	PAout(5)=0;
 			   		//初蕦化SPI1
 
-	SPIx_SetSpeed(SPI_SPEED_16);	//设置为18M时钟,炦速模蕼
+	SPIx_SetSpeed(SPI_SPEED_4);	//设置为18M时钟,炦速模蕼
 
 	SPI_FLASH_TYPE=SPI_Flash_ReadID();//读取FLASH ID.
 

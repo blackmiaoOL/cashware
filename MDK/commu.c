@@ -155,38 +155,64 @@ struct rt_thread thread_commu_read;
 void commu_send(u8 *buf,u32 len){
 	rt_mq_send(mq_commu_write,buf,len);
 }
+//void USART2_IRQHandler(void)
+//{
+//#ifdef RT_USING_UART2
+//    extern struct rt_device uart2_device;
+//	extern void rt_hw_serial_isr(struct rt_device *device);
 
+//    /* enter interrupt */
+//    rt_interrupt_enter();
+//	rt_hw_serial_isr(&uart2_device);
+////	if(USART2->SR&(1<<5))//接收到数据
+////	{	 
+//////		rt_kprintf("%c",USART2->DR);
+////	}
+//    
+
+//    /* leave interrupt */
+//    rt_interrupt_leave();
+//#endif
+//}
 static void commu_send_data(u8 *buf,u32 len){
-	u8 send_buf[]={SELF_STATE_WRITE};
-	u8 data_buf[10];
-	rt_mq_send (mq_commu,send_buf, 9);
-	rt_mq_send (mq_commu_data,send_buf, 9);
+	for(u8 i=0;i<len;i++){
+//		rt_kprintf("%c",buf[i]);
+	while((USART2->SR&0X40)==0);//循环发送,直到发送完毕 
+	//delay_ms(1);
+	USART2->DR = (u8)buf[i];      
 	
-	
-	spi_send_buf=buf;
-	spi_send_len=len;
-	IRQ_H;
-	
-	while(spi_state!=SPI_STATE_SEND_WAIT&&spi_state!=SPI_STATE_SEND_CONTENT);
-	while(spi_state!=SPI_STATE_WAIT);
+	}
+//	u8 send_buf[]={SELF_STATE_WRITE};
+//	u8 data_buf[10];
+//	rt_mq_send (mq_commu,send_buf, 9);
+//	rt_mq_send (mq_commu_data,send_buf, 9);
+//	
+//	
+//	spi_send_buf=buf;
+//	spi_send_len=len;
+//	IRQ_H;
+//	
+//	while(spi_state!=SPI_STATE_SEND_WAIT&&spi_state!=SPI_STATE_SEND_CONTENT);
+//	while(spi_state!=SPI_STATE_WAIT);
 }
 rt_mq_t mq_commu_hd;
-
 void rt_thread_entry_commu_hd(void* parameter){
-	while(1){
-		rt_mq_recv(mq_commu_hd_write,mq_buf,10,RT_WAITING_FOREVER);//wait for write
-		IRQ_H;
-		rt_mq_recv(mq_commu_hd_write,mq_buf,10,RT_WAITING_FOREVER);
-		IRQ_L;
-	}
 }
-
+//void rt_thread_entry_commu_hd(void* parameter){
+//	while(1){
+//		rt_mq_recv(mq_commu_hd_write,mq_buf,10,RT_WAITING_FOREVER);//wait for write
+//		IRQ_H;
+//		rt_sem_take(mq_commu_hd_write_finish,mq_buf,10,RT_WAITING_FOREVER);
+//		IRQ_L;
+//	}
+//}
+u32 test_data=0;
 void rt_thread_entry_commu(void* parameter){
 	u8 state=SELF_STATE_IDLE;
 	while(1){
 		u8 mq_buf[10];
-		rt_kprintf("S");   
-		
+		rt_kprintf("S%X",test_data);   
+		commu_send_data("miao",4);
 		rt_thread_delay(100);
 		continue;
 		rt_err_t result=rt_mq_recv (mq_commu,mq_buf,10,100);
@@ -225,7 +251,7 @@ void rt_thread_entry_commu(void* parameter){
 }
 
 
-u8 test_data;
+
 
 void SPI3_IRQHandler(void)
 {
