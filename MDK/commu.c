@@ -14,6 +14,7 @@
 //#define DATA_SET(a) do{GPIOE->ODR&=0XFC03;GPIOE->ODR|=((((u16)a)<<2)&0X3fc);}while(0)
 rt_mq_t mq_commu;
 rt_sem_t sem_commu;
+rt_sem_t sem_commu_self;
 rt_sem_t sem_app_init;
 extern  u32 flash_addr;
 extern u8 blue_choose;
@@ -24,8 +25,9 @@ extern rt_mq_t mq_commu;
 void blue_tooth_Init(void);
 ALIGN(RT_ALIGN_SIZE)
 char thread_commu_stack[1024];
+#define RECV_BUF_SIZE 600
+static u8 recv_buf[RECV_BUF_SIZE];
 struct rt_thread thread_commu;
-extern u8 flash_buf[512];
 u8 commu_send_byte(u8 info);
 
 
@@ -122,33 +124,54 @@ void commu_Init()
 #define SPI_STATE_WAIT 0
 #define SPI_STATE_SEND_WAIT 1
 #define SPI_STATE_SEND_CONTENT 2
-//static u8 spi_state;
-//static u32 spi_send_len;
-//static u8 *spi_send_buf;
+#define SPI_STATE_RECVING 3
+#define SPI_SEND_HEAD 0x3E
+#define SPI_SEND_NOTHING 0x8c
+#define SPI_RECV_HEAD 0x1D
+#define SPI_RECV_HEAD_MASTER_RECV 0XA8
+#define SPI_RECV_HEAD_MASTER_SEND 0X8a
 void commu_send(u8* buf,u32 len)
 {
-    u32 i=0;
-	spi_state=SPI_STATE_SEND_WAIT;
+
+//	spi_state=SPI_STATE_SEND_WAIT;
 	spi_send_buf=buf;
 	spi_send_len=len;
 	IRQ_H;
-//	while(spi_state!=SPI_STATE_WAIT);
 	
+	while(spi_state!=SPI_STATE_SEND_WAIT&&spi_state!=SPI_STATE_SEND_CONTENT);
+	while(spi_state!=SPI_STATE_WAIT);
+	
+}
+char thread_commu_read_stack[1024];
+struct rt_thread thread_commu_read;
+
+
+void rt_thread_entry_commu(void* parameter){
+	while(1){
+		rt_kprintf("S");   
+		commu_send("miaowu",6);
+		if(!rt_sem_take(sem_commu_self,100)){
+			
+			u32 len=(recv_buf[0]<<8)+(recv_buf[1]);
+			rt_kprintf("get%d",len);
+			for(u32 i=0;i<len;i++){
+				rt_kprintf("%c",recv_buf[i+2]);
+			}
+		}
+	}
 }
 
 
-// void commu_send_byte_half (u8 info);
+u8 test_data;
+
 void SPI3_IRQHandler(void)
 {
-    unsigned char rx;	
     static u32  cnt = 0;
-//	rt_kprintf("irq");
     if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_TXE) == SET)
     {
-//		rt_kprintf("send");
 		if(spi_state==SPI_STATE_SEND_WAIT)
 		{
-			SPI3->DR=0x3E;// start
+			SPI3->DR=SPI_SEND_HEAD;// start
 			spi_state=SPI_STATE_SEND_CONTENT;
 			cnt=0;
 		}else if(spi_state==SPI_STATE_SEND_CONTENT)
@@ -166,21 +189,45 @@ void SPI3_IRQHandler(void)
 			}
 			
 			cnt++;
-			if(cnt==spi_send_len+2)
+			if(cnt==spi_send_len+3)
 			{
 				spi_state=SPI_STATE_WAIT;
-				rt_kprintf("irqend");
 				IRQ_L;
 			}
 		}else{
-			SPI3->DR=0x8c;// nothing
+			SPI3->DR=SPI_SEND_NOTHING;
 		}
     }
+	static u32 len=0;
     if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_RXNE) == SET)
     {
-        //        Slave_rev_buff[i] = SPI3->DR ;
-        //        i++ ;
-        rt_kprintf("%X ",SPI3->DR);       
+		u8 data= SPI3->DR;
+//		rt_kprintf("%X ,spi_state %d\r\n",data,spi_state);
+		if(spi_state==SPI_STATE_WAIT){
+			if(data==SPI_RECV_HEAD_MASTER_RECV){
+				spi_state=SPI_STATE_SEND_WAIT;
+			}else if(data==SPI_RECV_HEAD_MASTER_SEND){
+				spi_state=SPI_STATE_RECVING;
+				cnt=0;
+				len=0;
+			}
+		}else if(spi_state==SPI_STATE_RECVING){
+			u32 pos=cnt>RECV_BUF_SIZE+1?RECV_BUF_SIZE-1:cnt;
+			recv_buf[pos]=data;
+			if(cnt==0){
+				len=data<<8;
+			}else if(cnt==1){
+				len|=data;
+			}else if(cnt<len+1){
+			}else if(cnt>=len+1){
+				rt_sem_release(sem_commu_self);
+				spi_state=SPI_STATE_WAIT;
+			}
+			
+			cnt++;	
+		}else{
+			//do nothing		
+		}
     }    
 }
 

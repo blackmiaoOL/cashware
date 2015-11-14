@@ -40,7 +40,7 @@ int main(void)
 	  
 	
 	JTAG_Set(1);//for free JTAG pins
-  delay_ms(200);		
+	delay_ms(200);		
   
 	SPI_Flash_Init(); 
 	commu_init();
@@ -53,23 +53,32 @@ int main(void)
 	Set_USBClock();
 	USB_Interrupts_Config();  
 	USB_Init();	
-//	delay_ms(1000);			//等待初始化完成 
+	delay_ms(500);			//等待初始化完成 
 //	printf("start");
 	
 	Mass_Memory_Size[0]=4000*512;
 	Mass_Block_Size[0] =512;
 	Mass_Block_Count[0]=4000;
-//	keyboard_init();
+	keyboard_init();
 	while(1){
-		printf("start");
+	keyboard_scan();
 //		commu_write("miao",5);
 		u32 len;
 		u8 *buf=commu_read(&len);
-		printf(" len=%d",len);
-		for(u32 i=0;i<len;i++){
-			printf("%X ",buf[i]);
+		
+		printf(" l %d ",len);
+		if(len>512){
+			len=512;
 		}
-		delay_ms(1000);	
+		for(u32 i=0;i<len;i++){
+			printf("%c",buf[i],buf[i]);
+//			delay_ms(1);
+		}
+		printf("\r\n");
+		delay_ms(100);
+		commu_write("woierwlne",6);
+		delay_ms(100);
+//		delay_ms(1000);	
 //		delay_ms(1000);	
 //		delay_ms(1000);	
 //		delay_ms(1000);	

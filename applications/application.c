@@ -43,6 +43,7 @@ extern rt_mq_t mq_commu;
 extern rt_mq_t mq_lua;
 //rt_mq_t mq_commu;
 extern rt_sem_t sem_commu;
+extern rt_sem_t sem_commu_self;
 extern rt_sem_t sem_app_init;
 rt_sem_t sem_ld3320;
 rt_sem_t sem_flash;
@@ -310,16 +311,7 @@ void rt_thread_entry_init(void* parameter)
     draw_bmp(104,63,"/icon/udisk_rd.bmp");
     
 }
-static char thread_commu_read_stack[1024];
-struct rt_thread thread_commu_read;
-void rt_thread_entry_commu(void* parameter){
-	rt_thread_delay(300);  
-	commu_Init();
-	commu_send("miaowu",6);
-	while(1){
-		delay_ms2(1000);
-	}
-}
+
 int rt_application_init()
 {
     
@@ -332,6 +324,7 @@ int rt_application_init()
                    &thread_commu_read_stack[0],
             sizeof(thread_commu_read_stack),11,5);
     rt_thread_startup(&thread_commu_read);
+	sem_commu_self=rt_sem_create ("sem_commu_self", 0, RT_IPC_FLAG_FIFO);
 	return 0;
 	while(1){
 
@@ -394,6 +387,7 @@ int rt_application_init()
     mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
     mq_commu=rt_mq_create ("mq_commu", 9, 100, RT_IPC_FLAG_FIFO);
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
+
     sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);
     sem_app_init=rt_sem_create ("sem_init", 0, RT_IPC_FLAG_FIFO);
     return 0;

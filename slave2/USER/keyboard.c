@@ -16,7 +16,7 @@ struct GPIO_struct{
 #define  ROW_LEN 5
 struct GPIO_struct keyboard_gpio_rows[ROW_LEN];
 struct GPIO_struct keyboard_gpio_cols[COL_LEN];
-static void scan(void);
+
 GPIO_TypeDef* char2port(char ch);
 u32 str2pin(char *str);
 u8 key_index[5][14]={{41 ,30 ,31 ,32 ,33 ,34 ,35 ,36 ,37 ,38 ,39 ,45 ,46 ,42},
@@ -90,9 +90,9 @@ void keyboard_init(void){
 			i++;
 		}
 		i++;
-		delay_ms(10);
+//		delay_ms(10);
 //		printf(" n:%d %d\r\n",io->pin,io->num);
-		delay_ms(10);
+//		delay_ms(10);
 		cnt++;
 	}
 	for(i=0;i<COL_LEN;i++){
@@ -106,10 +106,10 @@ void keyboard_init(void){
 		IOout(keyboard_gpio_rows[i].port,keyboard_gpio_rows[i].num,1);
 	}
 	printf("gpioc l %d h %d o %d i %d",GPIOB->CRL,GPIOB->CRH,GPIOB->ODR,GPIOB->IDR);
-	while(1){
-		scan();
-		delay_ms(10);
-	}
+//	while(1){
+//		keyboard_scan();
+//		delay_ms(10);
+//	}
 }
 GPIO_TypeDef* char2port(char ch){
     switch(ch){
@@ -142,7 +142,7 @@ u32 str2pin(char *str){
 //static u8 key_index[5][14];
 u16 key_val[5];
 
-static void scan(){
+void keyboard_scan(){
     u8 i=0,j=0;
     for(j=0;j<ROW_LEN;j++){
         key_val[j]=0;
