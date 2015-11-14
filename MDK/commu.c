@@ -12,10 +12,12 @@
 //#define END_H IO1(IOEB,PIN13)
 //#define END_L IO0(IOEB,PIN13)
 //#define DATA_SET(a) do{GPIOE->ODR&=0XFC03;GPIOE->ODR|=((((u16)a)<<2)&0X3fc);}while(0)
+rt_mq_t mq_commu_data;
 rt_mq_t mq_commu;
 rt_sem_t sem_commu;
 rt_sem_t sem_commu_self;
 rt_sem_t sem_app_init;
+rt_mq_t mq_commu_write;
 extern  u32 flash_addr;
 extern u8 blue_choose;
 void commu_blue_send(u8* buf,u32 lenth);
@@ -25,6 +27,7 @@ extern rt_mq_t mq_commu;
 void blue_tooth_Init(void);
 ALIGN(RT_ALIGN_SIZE)
 char thread_commu_stack[1024];
+
 #define RECV_BUF_SIZE 600
 static u8 recv_buf[RECV_BUF_SIZE];
 struct rt_thread thread_commu;
@@ -34,10 +37,12 @@ u8 commu_send_byte(u8 info);
 #define IRQ_L IO0(IOCB,PIN9)
 #define IRQ_H IO1(IOCB,PIN9)
 
-#define SPI_STATE_WAIT 0
-#define SPI_STATE_SEND_WAIT 1
-#define SPI_STATE_SEND_CONTENT 2
-
+#define COMMU_MQ_RECV_FINISH 0
+#define COMMU_MQ_SEND_FINISH 1
+#define COMMU_MQ_FLASH_WRITE 2
+#define COMMU_MQ_FLASH_READ 3
+#define COMMU_MQ_KB_WRITE 4
+#define COMMU_MQ_MOUSE_WRITE 5
 
 static u8 spi_state;
 static u32 spi_send_len;
@@ -130,33 +135,91 @@ void commu_Init()
 #define SPI_RECV_HEAD 0x1D
 #define SPI_RECV_HEAD_MASTER_RECV 0XA8
 #define SPI_RECV_HEAD_MASTER_SEND 0X8a
-void commu_send(u8* buf,u32 len)
-{
 
-//	spi_state=SPI_STATE_SEND_WAIT;
+char thread_commu_read_stack[1024];
+struct rt_thread thread_commu_read;
+
+#define COMMU_MQ_RECV_FINISH 0
+#define COMMU_MQ_SEND_FINISH 1
+#define COMMU_MQ_FLASH_WRITE 2
+#define COMMU_MQ_FLASH_READ 3
+#define COMMU_MQ_KB_WRITE 4
+#define COMMU_MQ_MOUSE_WRITE 5
+#define COMMU_MQ_TEST 6
+
+#define SELF_STATE_IDLE 0
+#define SELF_STATE_READ 1
+#define SELF_STATE_WRITE 2
+
+
+void commu_send(u8 *buf,u32 len){
+	rt_mq_send(mq_commu_write,buf,len);
+}
+
+static void commu_send_data(u8 *buf,u32 len){
+	u8 send_buf[]={SELF_STATE_WRITE};
+	u8 data_buf[10];
+	rt_mq_send (mq_commu,send_buf, 9);
+	rt_mq_send (mq_commu_data,send_buf, 9);
+	
+	
 	spi_send_buf=buf;
 	spi_send_len=len;
 	IRQ_H;
 	
 	while(spi_state!=SPI_STATE_SEND_WAIT&&spi_state!=SPI_STATE_SEND_CONTENT);
 	while(spi_state!=SPI_STATE_WAIT);
-	
 }
-char thread_commu_read_stack[1024];
-struct rt_thread thread_commu_read;
+rt_mq_t mq_commu_hd;
 
+void rt_thread_entry_commu_hd(void* parameter){
+	while(1){
+		rt_mq_recv(mq_commu_hd_write,mq_buf,10,RT_WAITING_FOREVER);//wait for write
+		IRQ_H;
+		rt_mq_recv(mq_commu_hd_write,mq_buf,10,RT_WAITING_FOREVER);
+		IRQ_L;
+	}
+}
 
 void rt_thread_entry_commu(void* parameter){
+	u8 state=SELF_STATE_IDLE;
 	while(1){
+		u8 mq_buf[10];
 		rt_kprintf("S");   
-		commu_send("miaowu",6);
-		if(!rt_sem_take(sem_commu_self,100)){
-			
-			u32 len=(recv_buf[0]<<8)+(recv_buf[1]);
-			rt_kprintf("get%d",len);
-			for(u32 i=0;i<len;i++){
-				rt_kprintf("%c",recv_buf[i+2]);
+		
+		rt_thread_delay(100);
+		continue;
+		rt_err_t result=rt_mq_recv (mq_commu,mq_buf,10,100);
+		if(!result){
+			switch(mq_buf[0]){
+				case COMMU_MQ_RECV_FINISH:
+				{
+					u32 len=(recv_buf[0]<<8)+(recv_buf[1]);
+					rt_kprintf("get%d",len);
+					for(u32 i=0;i<len;i++){
+						rt_kprintf("%c",recv_buf[i+2]);
+					}
+					state=SELF_STATE_IDLE;
+					break;
+				}
+				case COMMU_MQ_SEND_FINISH:
+					
+					break;
+				case COMMU_MQ_FLASH_WRITE:
+					
+					break;
+				case COMMU_MQ_FLASH_READ:
+					break;
+				case COMMU_MQ_KB_WRITE:
+					break;
+				case COMMU_MQ_MOUSE_WRITE:
+					break;
+				case COMMU_MQ_TEST:
+					break;
+				default:
+					rt_kprintf("bad type");
 			}
+			
 		}
 	}
 }
@@ -220,7 +283,10 @@ void SPI3_IRQHandler(void)
 				len|=data;
 			}else if(cnt<len+1){
 			}else if(cnt>=len+1){
+				u8 send_buf[]={COMMU_MQ_RECV_FINISH};
 				rt_sem_release(sem_commu_self);
+				rt_mq_send (mq_commu,send_buf, 9);
+				
 				spi_state=SPI_STATE_WAIT;
 			}
 			

@@ -182,7 +182,7 @@ static void rt_thread_entry_Flash_Read(void* parameter)
     IOConfig(IOBB,PIN6,xialashuru);
    // rt_thread_delay(100);
     //	DBG("--------------------SCAN_START\r\n");
-  rt_thread_delay(100);
+    rt_thread_delay(100);
     while(1)
     {
         while(PBin(6)==0)
@@ -311,7 +311,20 @@ void rt_thread_entry_init(void* parameter)
     draw_bmp(104,63,"/icon/udisk_rd.bmp");
     
 }
+char thread_test_stack[1024];
+struct rt_thread thread_test;
+void rt_thread_entry_test(void* parameter){
+	while(1){
+		rt_thread_delay(100);
+		rt_kprintf("found\n\r");
+		commu_send("miaowu",6);
+	}
+}
 
+char thread_commu_hd_stack[1024];
+struct rt_thread thread_commu_hd;
+extern void rt_thread_entry_commu_hd(void* parameter);
+extern rt_mq_t mq_commu_hd;
 int rt_application_init()
 {
     
@@ -323,11 +336,29 @@ int rt_application_init()
                    RT_NULL,
                    &thread_commu_read_stack[0],
             sizeof(thread_commu_read_stack),11,5);
+	rt_thread_init(&thread_test,
+                   "test",
+                   rt_thread_entry_test,
+                   RT_NULL,
+                   &thread_test_stack[0],
+            sizeof(thread_test_stack),13,5);
+	rt_thread_init(&thread_commu_hd,
+                   "commu_hd",
+                   rt_thread_entry_commu_hd,
+                   RT_NULL,
+                   &thread_commu_hd_stack[0],
+            sizeof(thread_test_stack),13,5);
     rt_thread_startup(&thread_commu_read);
+	rt_thread_startup(&thread_test);
+	rt_thread_startup(&thread_commu_hd);
+	
 	sem_commu_self=rt_sem_create ("sem_commu_self", 0, RT_IPC_FLAG_FIFO);
+	mq_commu=rt_mq_create ("mq_commu", 9, 100, RT_IPC_FLAG_FIFO);
+	mq_commu_hd=rt_mq_create ("mq_commu_hd", 9, 100, RT_IPC_FLAG_FIFO);
+	mq_commu_data=rt_mq_create ("mq_commu_data", 3, 600, RT_IPC_FLAG_FIFO);
 	return 0;
 	while(1){
-
+		
 		delay_ms2(3000);
 	}
 	while(1);
@@ -385,7 +416,7 @@ int rt_application_init()
         
   //  Jacob_appinit();
     mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
-    mq_commu=rt_mq_create ("mq_commu", 9, 100, RT_IPC_FLAG_FIFO);
+    
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
 
     sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);
