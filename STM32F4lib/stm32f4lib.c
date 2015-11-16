@@ -129,10 +129,10 @@ void zhongduanConfig(u8 NVIC_Channel,int i)
 {
 	//MY_NVIC_Init(i,0,NVIC_Channel,4);			
 }
-void usart2putchar(char c)
-{
-	USART2->DR=c;				 
-}
+//void usart2putchar(char c)
+//{
+//	USART2->DR=c;				 
+//}
 void delay_s(u32 aa)
 {
 	//u32 i;

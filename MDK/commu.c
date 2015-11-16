@@ -28,8 +28,8 @@ void blue_tooth_Init(void);
 ALIGN(RT_ALIGN_SIZE)
 char thread_commu_stack[1024];
 
-#define RECV_BUF_SIZE 600
-static u8 recv_buf[RECV_BUF_SIZE];
+
+
 struct rt_thread thread_commu;
 u8 commu_send_byte(u8 info);
 
@@ -139,13 +139,13 @@ void commu_Init()
 char thread_commu_read_stack[1024];
 struct rt_thread thread_commu_read;
 
-#define COMMU_MQ_RECV_FINISH 0
-#define COMMU_MQ_SEND_FINISH 1
-#define COMMU_MQ_FLASH_WRITE 2
-#define COMMU_MQ_FLASH_READ 3
-#define COMMU_MQ_KB_WRITE 4
-#define COMMU_MQ_MOUSE_WRITE 5
-#define COMMU_MQ_TEST 6
+//#define COMMU_MQ_RECV_FINISH 0
+//#define COMMU_MQ_SEND_FINISH 1
+//#define COMMU_MQ_FLASH_WRITE 2
+//#define COMMU_MQ_FLASH_READ 3
+//#define COMMU_MQ_KB_WRITE 4
+//#define COMMU_MQ_MOUSE_WRITE 5
+//#define COMMU_MQ_TEST 6
 
 #define SELF_STATE_IDLE 0
 #define SELF_STATE_READ 1
@@ -155,197 +155,157 @@ struct rt_thread thread_commu_read;
 void commu_send(u8 *buf,u32 len){
 	rt_mq_send(mq_commu_write,buf,len);
 }
-//void USART2_IRQHandler(void)
-//{
-//#ifdef RT_USING_UART2
-//    extern struct rt_device uart2_device;
-//	extern void rt_hw_serial_isr(struct rt_device *device);
 
-//    /* enter interrupt */
-//    rt_interrupt_enter();
-//	rt_hw_serial_isr(&uart2_device);
-////	if(USART2->SR&(1<<5))//接收到数据
-////	{	 
-//////		rt_kprintf("%c",USART2->DR);
-////	}
-//    
+#define COMMU_RECV_STATE_WAIT 0
+#define COMMU_RECV_STATE_RECVING 1
+#define COMMU_RECV_HEAD_MASTER_RECV 'S'
+#define COMMU_RECV_HEAD_MASTER_SEND 'R'
+static void commu_putchar(u8 data){
+	while((USART2->SR&0X40)==0);//循环发送,直到发送完毕 	
+	USART2->DR =data ;
+}
 
-//    /* leave interrupt */
-//    rt_interrupt_leave();
-//#endif
-//}
-static void commu_send_data(u8 *buf,u32 len){
-	for(u8 i=0;i<len;i++){
-//		rt_kprintf("%c",buf[i]);
-	while((USART2->SR&0X40)==0);//循环发送,直到发送完毕 
-	//delay_ms(1);
-	USART2->DR = (u8)buf[i];      
-	
+rt_mailbox_t mb_commu_send;
+
+struct commu_st{
+	u8 *buf;
+	u8 type;
+	u32 len;
+	rt_mutex_t mutex;
+};
+
+void common_commu_send(u8 *buf,u32 len,u8 type){
+	struct commu_st *st2send;
+	rt_mutex_t mutex=rt_mutex_create("wait", RT_IPC_FLAG_FIFO);
+	st2send=rt_malloc(sizeof(struct commu_st)*2);
+	st2send->buf=buf;
+	st2send->len=len;
+	st2send->mutex=mutex;
+	st2send->type=type;	
+	rt_mb_send(mb_commu_send,(rt_uint32_t)st2send);
+	rt_mutex_take(mutex, RT_WAITING_FOREVER);
+	rt_free(st2send);
+	rt_mutex_delete(mutex);
+}
+void rt_thread_entry_commu_send(void* parameter){
+	while(1){
+		struct commu_st * commu_send_st;
+		rt_mb_recv(mb_commu_send,(rt_uint32_t *)&commu_send_st,RT_WAITING_FOREVER);
+//		rt_kprintf("wwwwwwwwwww");
+		commu_putchar(COMMU_RECV_HEAD_MASTER_RECV);
+		
+		u8 *buf=commu_send_st->buf;
+		u32 len=commu_send_st->len;
+		u8 type=commu_send_st->type;
+		
+		commu_putchar(len>>8);
+		commu_putchar(len&0XFF);
+		commu_putchar(type);
+//		rt_kprintf("send len %d type %d ",len,type);
+		for(u32 i=0;i<len;i++){
+			commu_putchar((u8)buf[i]);
+			
+		}
+			
+		while((USART2->SR&0X40)==0);
+		rt_mutex_release(commu_send_st->mutex);
 	}
-//	u8 send_buf[]={SELF_STATE_WRITE};
-//	u8 data_buf[10];
-//	rt_mq_send (mq_commu,send_buf, 9);
-//	rt_mq_send (mq_commu_data,send_buf, 9);
-//	
-//	
-//	spi_send_buf=buf;
-//	spi_send_len=len;
-//	IRQ_H;
-//	
-//	while(spi_state!=SPI_STATE_SEND_WAIT&&spi_state!=SPI_STATE_SEND_CONTENT);
-//	while(spi_state!=SPI_STATE_WAIT);
 }
-rt_mq_t mq_commu_hd;
-void rt_thread_entry_commu_hd(void* parameter){
-}
-//void rt_thread_entry_commu_hd(void* parameter){
-//	while(1){
-//		rt_mq_recv(mq_commu_hd_write,mq_buf,10,RT_WAITING_FOREVER);//wait for write
-//		IRQ_H;
-//		rt_sem_take(mq_commu_hd_write_finish,mq_buf,10,RT_WAITING_FOREVER);
-//		IRQ_L;
-//	}
-//}
+
 u32 test_data=0;
+u8 commu_handle_buf[600];
+rt_mq_t mq_commu_recv;
+extern rt_mq_t mq_flash_read;
 void rt_thread_entry_commu(void* parameter){
 	u8 state=SELF_STATE_IDLE;
 	while(1){
-		u8 mq_buf[10];
-		rt_kprintf("S%X",test_data);   
-		commu_send_data("miao",4);
-		rt_thread_delay(100);
-		continue;
-		rt_err_t result=rt_mq_recv (mq_commu,mq_buf,10,100);
+
+		rt_err_t result=rt_mq_recv (mq_commu_recv,commu_handle_buf,600,100);
 		if(!result){
-			switch(mq_buf[0]){
-				case COMMU_MQ_RECV_FINISH:
-				{
-					u32 len=(recv_buf[0]<<8)+(recv_buf[1]);
-					rt_kprintf("get%d",len);
-					for(u32 i=0;i<len;i++){
-						rt_kprintf("%c",recv_buf[i+2]);
-					}
-					state=SELF_STATE_IDLE;
+			u32 len=(commu_handle_buf[0]<<8)+commu_handle_buf[1];
+			u8 type=commu_handle_buf[2];
+			rt_kprintf("s%d %d ",len,type);
+//			for(u32 i=0;i<len;i++){
+//				rt_kprintf("%c%02X",commu_handle_buf[i+3],commu_handle_buf[i+3]);   
+//			}
+			switch(type){
+				case COMMU_TYPE(KEYBOARD_MS):
+					//directly return
+					common_commu_send(commu_handle_buf+3,8,COMMU_TYPE(KEYBOARD_SM));
 					break;
-				}
-				case COMMU_MQ_SEND_FINISH:
-					
+				case COMMU_TYPE(FLASH_READ_DATA):
+					rt_kprintf("flash get");
+					rt_mq_send(mq_flash_read,commu_handle_buf+3,512);
+////					common_commu_send(commu_handle_buf+3,8,COMMU_TYPE(KEYBOARD_SM));
 					break;
-				case COMMU_MQ_FLASH_WRITE:
-					
-					break;
-				case COMMU_MQ_FLASH_READ:
-					break;
-				case COMMU_MQ_KB_WRITE:
-					break;
-				case COMMU_MQ_MOUSE_WRITE:
-					break;
-				case COMMU_MQ_TEST:
-					break;
-				default:
-					rt_kprintf("bad type");
 			}
-			
+			rt_kprintf("\r\n");
 		}
+//		commu_send_data("wuwwu",5);
+		
+
 	}
 }
 
+u8 commu_state=COMMU_RECV_STATE_WAIT;
+#define RECV_BUF_SIZE 600
+/*
+recv package format
+0:COMMU_RECV_HEAD_MASTER_RECV
+1:len>>8
+2:len&0xff
+other:data
+*/
+#define RECV_BUF_SIZE 600
 
 
+void commu_recv_handle(u8 data){
+	static u32 cnt = 0,len=0;
+	static u8 recv_buf[RECV_BUF_SIZE];
+	if(commu_state==COMMU_RECV_STATE_WAIT){
+		if(data==COMMU_RECV_HEAD_MASTER_SEND){
+			commu_state=COMMU_RECV_STATE_RECVING;
+			cnt = 0;
+			len=0;
+		}else{
+		}
+	}else if(commu_state==COMMU_RECV_STATE_RECVING){
+		u32 pos=cnt>RECV_BUF_SIZE+1?RECV_BUF_SIZE-1:cnt;
+		recv_buf[pos]=data;
+		if(cnt==0){
+			len=data<<8;
+		}else if(cnt==1){
+			len|=data;
+		}else if(cnt<len+2){
+		}else if(cnt>=len+2){
+			rt_mq_send(mq_commu_recv,recv_buf, len+3);
+			
+			commu_state=COMMU_RECV_STATE_WAIT;
+		}
+		
+		cnt++;	
+	}else{
+		//do nothing		
+	}
+}
 
 void SPI3_IRQHandler(void)
 {
     static u32  cnt = 0;
     if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_TXE) == SET)
     {
-		if(spi_state==SPI_STATE_SEND_WAIT)
-		{
-			SPI3->DR=SPI_SEND_HEAD;// start
-			spi_state=SPI_STATE_SEND_CONTENT;
-			cnt=0;
-		}else if(spi_state==SPI_STATE_SEND_CONTENT)
-		{
-			if(cnt==0)
-			{
-				SPI3->DR=spi_send_len>>8;
-				
-			}else if(cnt==1)
-			{
-				SPI3->DR=spi_send_len%8;
-			}else
-			{
-				SPI3->DR=spi_send_buf[cnt-2];
-			}
-			
-			cnt++;
-			if(cnt==spi_send_len+3)
-			{
-				spi_state=SPI_STATE_WAIT;
-				IRQ_L;
-			}
-		}else{
-			SPI3->DR=SPI_SEND_NOTHING;
-		}
+		SPI3->DR=0;
     }
 	static u32 len=0;
     if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_RXNE) == SET)
     {
 		u8 data= SPI3->DR;
-//		rt_kprintf("%X ,spi_state %d\r\n",data,spi_state);
-		if(spi_state==SPI_STATE_WAIT){
-			if(data==SPI_RECV_HEAD_MASTER_RECV){
-				spi_state=SPI_STATE_SEND_WAIT;
-			}else if(data==SPI_RECV_HEAD_MASTER_SEND){
-				spi_state=SPI_STATE_RECVING;
-				cnt=0;
-				len=0;
-			}
-		}else if(spi_state==SPI_STATE_RECVING){
-			u32 pos=cnt>RECV_BUF_SIZE+1?RECV_BUF_SIZE-1:cnt;
-			recv_buf[pos]=data;
-			if(cnt==0){
-				len=data<<8;
-			}else if(cnt==1){
-				len|=data;
-			}else if(cnt<len+1){
-			}else if(cnt>=len+1){
-				u8 send_buf[]={COMMU_MQ_RECV_FINISH};
-				rt_sem_release(sem_commu_self);
-				rt_mq_send (mq_commu,send_buf, 9);
-				
-				spi_state=SPI_STATE_WAIT;
-			}
-			
-			cnt++;	
-		}else{
-			//do nothing		
-		}
+
     }    
 }
 
 
-// void commu_send_byte_half(u8 info)
-//{
-//    volatile int cnt=0;
-//	u32 i=0;
-//    begin:
-//	DATA_W(info);
-//    CLK_L;
-//    while(!FINISH_FLAG)
-//	{
-//		i++;
-//		if(i>3000000)
-//		{
-//			CLK_H;
-//			 for(cnt=0;cnt<100;cnt++);
-//			goto begin;
-//		}
-//			
-//	}
-//    CLK_H;
-//    for(cnt=0;cnt<100;cnt++);
-//	
-//}
+
 void blue_putchar(u8 ch);
 void commu_blue_send(u8* buf,u32 lenth)
 {
@@ -358,55 +318,8 @@ void commu_blue_send(u8* buf,u32 lenth)
     }
 }
 
-void commu_recv_byte_half(u8* data);
-void commu_recv_byte(u8* data)
-{
-//    *data=commu_send_byte(0x12);
-    
-}
-
-//void commu_recv_byte_half(u8* data)
-//{
-//   volatile int cnt=0;
-//	u32 i=0;
-//    begin:
-//    CLK_L;
-//    while(!FINISH_FLAG)
-//	{
-//		i++;
-//		if(i>30000)
-//		{
-//			CLK_H;
-//			 for(cnt=0;cnt<100;cnt++);
-//			goto begin;
-//		}
-//			
-//	}
-//	*data=IOBB->IDR&0XFF;
-//	//DBG("%d,",IOBB->IDR&0XFF);
-//    CLK_H;
-//	 while(FINISH_FLAG);
-//    for(cnt=0;cnt<100;cnt++);
-//}
-
-
-
 void commu_recv(u8* buf,u32 lenth)
 {
-//    u32 i=0;
-//    
-//    if(lenth==512)
-//    {
-//        commu_send_byte(12<<4);
-//    }
-//    else
-//        commu_send_byte(9<<4);
-//    commu_send_byte(12);
-//    for(i=0;i<lenth;i++)
-//    {
-//        commu_recv_byte(buf+i);
-//        
-//    }
-    
+
 }
 

@@ -5,6 +5,7 @@
 #include "sys.h"
 #include "stm32f10x_gpio.h"
 #include "usart.h"
+#include "commu_mcu.h"
 typedef u16 uint16_t;
 
 struct GPIO_struct{
@@ -138,7 +139,7 @@ u32 str2pin(char *str){
 }
 
 
-
+void keyboard_send_commu(key_t key_buf);
 //static u8 key_index[5][14];
 u16 key_val[5];
 
@@ -176,7 +177,7 @@ void keyboard_scan(){
 
     u8 key_data_index=0;
     static u8 pre_press=0;
-    static u8 key_press=0;
+    u8 key_press=0;
 	  key_t key_buf;
 		for(i=0;i<6;i++){
 			key_buf.key[i]=0;
@@ -230,12 +231,15 @@ void keyboard_scan(){
     }
 
     if(key_press){
-        keyboard_send(key_buf);
+//		commu_send(key_buf+1,8,COMMU_TYPE(KEYBOARD_MS));
+        keyboard_send_commu(key_buf);
+		
 //        rt_kprintf("key press %d  %d %d\n",j,i,Keyboard.key[0]);
     }
     else if(pre_press){
         pre_press=0;
-        keyboard_send(key_buf);
+		
+        keyboard_send_commu(key_buf);
     }
 
 end:
@@ -243,6 +247,16 @@ end:
 
 //    rt_kprintf("\n");
 
+}
+void keyboard_send_commu(key_t key_buf){
+	u8 buf[8];
+	buf[0]=(key_buf.L_CTRL<<0)+(key_buf.L_SHIFT<<1)+(key_buf.L_ALT<<2)+(key_buf.L_GUI<<3)+(key_buf.R_CTRL<<4)+(key_buf.R_SHIFT<<5)+(key_buf.R_ALT<<6)+(key_buf.R_GUI<<7);
+	buf[1]=0;
+	for(u8 i=0;i<6;i++){
+		buf[2+i]=key_buf.key[i];
+	}
+	commu_send(buf,8,COMMU_TYPE(KEYBOARD_MS));
+//	keyborad_process(buf);
 }
 //void keyboard_io_init(){
 //    u8 i=0,j=0;

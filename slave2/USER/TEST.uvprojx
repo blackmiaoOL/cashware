@@ -477,6 +477,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\SPI\spi.c</FilePath>
             </File>
+            <File>
+              <FileName>commu_mcu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\commu_mcu.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

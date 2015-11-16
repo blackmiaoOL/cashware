@@ -10,6 +10,7 @@
 #include "mass_mal.h"
 #include "keyboard.h"
 #include "commu.h"
+#include "commu_mcu.h"
 #include "w25q16.h"
 extern u8 EP1BUSY;			//键盘数据发送忙标志 
 extern u8 EP2BUSY;			//鼠标数据发送忙标志
@@ -28,7 +29,8 @@ extern u8 ptr_write;
 extern u8 ptr_read;
 u8 buf_test[512];
 u8 buf_try[]={0,0,20,0,0,0,0,0};
-
+extern bool keyboard_flag;
+extern u8 buf_send[9];
 int main(void)
 {
 //	u32 i=0;
@@ -61,8 +63,15 @@ int main(void)
 	Mass_Block_Count[0]=4000;
 	keyboard_init();
 	while(1){
-	keyboard_scan();
-////		commu_write("miao",5);
+		keyboard_scan();
+//		commu_send("miao\r\n",6,COMMU_TYPE(DEBUG));
+		delay_ms(10);
+//		if(keyboard_flag){
+//			printf("send%d",buf_send[3]);
+//			
+//			keyboard_flag=false;
+//			keyborad_process(buf_send);
+//		}
 //		u32 len;
 ////		u8 *buf=commu_read(&len);
 //		

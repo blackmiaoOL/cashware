@@ -11,7 +11,9 @@
 //#include "usbdisk.h"	/* Example: USB drive control */
 //#include "atadrive.h"	/* Example: ATA drive control */
 #include "w25q16.h"		/* Example: MMC/SDC contorl */
-
+#include "rtthread.h"
+#include "commu.h"
+rt_mq_t mq_flash_read;
 /* Definitions of physical drive number for each media */
 //#define ATA		0
 #define MMC		0
@@ -24,13 +26,29 @@
 //void SPI_Flash_Read(u8* pBuffer,u32 ReadAddr,u16 NumByteToRead);   //??flash
 //void SPI_Flash_Write(u8* pBuffer,u32 WriteAddr,u16 NumByteToWrite);//??flash
 //void SPI_Flash_Read(u8* pBuffer,u32 ReadAddr,u16 NumByteToRead);
+
+#define MY_FLASH_CMD_READ 0
+#define MY_FLASH_CMD_WRITE 1
 void MMC_disk_read(u8* pBuffer,u32 sector_addr,u16 NumSectorToRead)
 {
-	SPI_Flash_Read(pBuffer,sector_addr<<9, NumSectorToRead<<9);
+	/*
+	0   type(read/write)
+	1~4 sector_addr
+	5~6 NumSectorToRead
+	*/
+	rt_kprintf("flash read! %d %d ",sector_addr,NumSectorToRead);
+	u8 cmd_buf[8]={MY_FLASH_CMD_READ,(sector_addr>>24)&0xff,(sector_addr>>16)&0xff,(sector_addr>>8)&0xff,(sector_addr)&0xff,NumSectorToRead>>8,NumSectorToRead&0xff};
+	common_commu_send(cmd_buf,8,COMMU_TYPE(FLASH_READ_CMD));
+	rt_mq_recv(mq_flash_read,pBuffer,512,RT_WAITING_FOREVER);
+//	for(u32 i=0;i<512;i++){
+//		rt_kprintf("%02X",pBuffer[i]);   
+//	}
+	rt_kprintf("rrrrfinish\r\n");
+//	SPI_Flash_Read(pBuffer,sector_addr<<9, NumSectorToRead<<9);
 }
 void MMC_disk_write( u8* pBuffer,u32 sector_addr,u16 NumSectorToWrite)
 {
-	SPI_Flash_Write(pBuffer,sector_addr<<9, NumSectorToWrite<<9);
+//	SPI_Flash_Write(pBuffer,sector_addr<<9, NumSectorToWrite<<9);
 }
 
 DSTATUS disk_initialize (
@@ -127,7 +145,7 @@ DRESULT disk_ioctl (
 
 }
 #endif
-u32 get_fattime()
+DWORD get_fattime()
 {
 	return 0;
 }

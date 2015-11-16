@@ -252,79 +252,91 @@ void rt_thread_entry_app(void* parameter);
 
 FATFS fs;
 ALIGN(RT_ALIGN_SIZE)
-char thread_init_stack[1024];
+char thread_init_stack[20024];
 struct rt_thread
 thread_init;
 void rt_thread_entry_init(void* parameter)
 {
-    rt_device_t LED_dev;
+//    rt_device_t LED_dev;
     u8 led_value;
     u8 i;
-    if(f_mount(&fs,"/",1))
+	u8 result=f_mount(&fs,"/",1);
+    if(result)
     {
-        DBG("FS mount failed!!\r\n");
+        rt_kprintf("FS mount failed!!\r\n%d",result);
+		return;
     }
     
     ini_init();
     key_cap_Init();
-    blue_tooth_Init();
-    commu_Init();
-    OLED_dev=rt_device_find("OLED");
-    if(OLED_dev!=RT_NULL)
-    {
-        rt_kprintf("OLED dev found\n\r");
-    }  
-	rt_device_open(OLED_dev,RT_DEVICE_FLAG_ACTIVATED);
+	while(1)
+	{
+        rt_thread_delay(1000);       
+	}
+//    blue_tooth_Init();
+//    commu_Init();
+//    OLED_dev=rt_device_find("OLED");
+//    if(OLED_dev!=RT_NULL)
+//    {
+//        rt_kprintf("OLED dev found\n\r");
+//    }  
+//	rt_device_open(OLED_dev,RT_DEVICE_FLAG_ACTIVATED);
+//    
+//    
+//    LED_dev=rt_device_find("LED");
+//    rt_device_open(LED_dev,RT_DEVICE_FLAG_ACTIVATED);
+//    if(LED_dev!=RT_NULL)
+//    {
+//        rt_kprintf("LED dev found\n\r");
+//        rt_device_write(LED_dev,0,&led_value,1);
+//        led_value++;
+//    }
+//    rt_device_close(LED_dev);
+//    cmd("Initializing~");
+//    
     
-    
-    LED_dev=rt_device_find("LED");
-    rt_device_open(LED_dev,RT_DEVICE_FLAG_ACTIVATED);
-    if(LED_dev!=RT_NULL)
-    {
-        rt_kprintf("LED dev found\n\r");
-        rt_device_write(LED_dev,0,&led_value,1);
-        led_value++;
-    }
-    rt_device_close(LED_dev);
-    cmd("Initializing~");
-    
-    
-    for(i=0;i<1;i++)
-    draw_bmp(i,63,"/background.bmp");
-    
-   // draw_bmp(0,43,"/24L01_1.bmp");
-    draw_bmp(26,43,"/icon/AHKScript.bmp");
-    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
-    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
-    draw_bmp(104,43,"/icon/micoff.bmp");
-    
-    draw_bmp(0,23,"/icon/MouseOff.bmp");
-    draw_bmp(26,23,"/icon/udisk_rd.bmp");
-    draw_bmp(52,23,"/icon/udisk_rd.bmp");
-    draw_bmp(78,23,"/icon/udisk_rd.bmp");
-    draw_bmp(104,23,"/icon/udisk_rd.bmp");
-    
-    draw_bmp(0,63,"/icon/udisk_rd.bmp");
-    draw_bmp(26,63,"/icon/udisk_rd.bmp");
-    draw_bmp(52,63,"/icon/udisk_rd.bmp");
-    draw_bmp(78,63,"/icon/udisk_rd.bmp");
-    draw_bmp(104,63,"/icon/udisk_rd.bmp");
+//    for(i=0;i<1;i++)
+//    draw_bmp(i,63,"/background.bmp");
+//    
+//   // draw_bmp(0,43,"/24L01_1.bmp");
+//    draw_bmp(26,43,"/icon/AHKScript.bmp");
+//    draw_bmp(52,43,"/icon/KeyBoardOff.bmp");
+//    draw_bmp(78,43,"/icon/AHKScript_1.bmp");
+//    draw_bmp(104,43,"/icon/micoff.bmp");
+//    
+//    draw_bmp(0,23,"/icon/MouseOff.bmp");
+//    draw_bmp(26,23,"/icon/udisk_rd.bmp");
+//    draw_bmp(52,23,"/icon/udisk_rd.bmp");
+//    draw_bmp(78,23,"/icon/udisk_rd.bmp");
+//    draw_bmp(104,23,"/icon/udisk_rd.bmp");
+//    
+//    draw_bmp(0,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(26,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(52,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(78,63,"/icon/udisk_rd.bmp");
+//    draw_bmp(104,63,"/icon/udisk_rd.bmp");
     
 }
 char thread_test_stack[1024];
 struct rt_thread thread_test;
 void rt_thread_entry_test(void* parameter){
 	while(1){
-		rt_thread_delay(100);
-		rt_kprintf("found\n\r");
-		commu_send("miaowu",6);
+		rt_thread_delay(1000);
+//		rt_kprintf("found\n\r");
+//		u8 buf[8]={0,0,39};
+//		common_commu_send(buf,8,COMMU_TYPE(KEYBOARD_SM));		
+//		rt_thread_delay(1000);	
+//		u8 empty[8]={COMMU_TYPE(KEYBOARD_SM)};
+//		common_commu_send(empty,8);
 	}
 }
 
-char thread_commu_hd_stack[1024];
-struct rt_thread thread_commu_hd;
-extern void rt_thread_entry_commu_hd(void* parameter);
-extern rt_mq_t mq_commu_hd;
+char thread_commu_send_stack[1024];
+struct rt_thread thread_commu_send;
+extern void rt_thread_entry_commu_send(void* parameter);
+extern rt_mailbox_t mb_commu_send;
+extern rt_mq_t mq_commu_recv;
+extern rt_mq_t mq_flash_read;
 int rt_application_init()
 {
     
@@ -342,32 +354,62 @@ int rt_application_init()
                    RT_NULL,
                    &thread_test_stack[0],
             sizeof(thread_test_stack),13,5);
-	rt_thread_init(&thread_commu_hd,
-                   "commu_hd",
-                   rt_thread_entry_commu_hd,
+	rt_thread_init(&thread_commu_send,
+                   "commu_send",
+                   rt_thread_entry_commu_send,
                    RT_NULL,
-                   &thread_commu_hd_stack[0],
-            sizeof(thread_test_stack),13,5);
+                   &thread_commu_send_stack[0],
+            sizeof(thread_commu_send_stack),13,5);
+	
+	rt_thread_init(&thread_init,
+			   "init",
+			   rt_thread_entry_init,
+			   RT_NULL,
+			   &thread_init_stack[0],
+		sizeof(thread_init_stack),1,5);
+	rt_thread_init(&thread_app,
+                   "app",
+                   rt_thread_entry_app,
+                   RT_NULL,
+                   &thread_app_stack[0],
+            sizeof(thread_app_stack),10,5);
+    rt_thread_startup(&thread_app);
+	
+	
+	
+	
     rt_thread_startup(&thread_commu_read);
 	rt_thread_startup(&thread_test);
-	rt_thread_startup(&thread_commu_hd);
+	rt_thread_startup(&thread_commu_send);
+	rt_thread_startup(&thread_init);
+	
 	
 	sem_commu_self=rt_sem_create ("sem_commu_self", 0, RT_IPC_FLAG_FIFO);
 	mq_commu=rt_mq_create ("mq_commu", 9, 100, RT_IPC_FLAG_FIFO);
-	mq_commu_hd=rt_mq_create ("mq_commu_hd", 9, 100, RT_IPC_FLAG_FIFO);
+	
+	mq_flash_read=rt_mq_create ("mq_flash_read", 600, 3, RT_IPC_FLAG_FIFO);
+	mb_commu_send=rt_mb_create ("mb_commu_send", 10, RT_IPC_FLAG_FIFO);
 	mq_commu_data=rt_mq_create ("mq_commu_data", 3, 600, RT_IPC_FLAG_FIFO);
+	mq_commu_recv=rt_mq_create ("mq_commu_recv", 600, 4, RT_IPC_FLAG_FIFO);
+	
+	
+	
+	    mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
+    
+    sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
+
+    sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);
+    sem_app_init=rt_sem_create ("sem_init", 0, RT_IPC_FLAG_FIFO);
+	
+	
+	
 	return 0;
 	while(1){
 		
 		delay_ms2(3000);
 	}
 	while(1);
-    rt_thread_init(&thread_init,
-                   "init",
-                   rt_thread_entry_init,
-                   RT_NULL,
-                   &thread_init_stack[0],
-            sizeof(thread_init_stack),1,5);
+
     
 
     rt_thread_init(&thread_usb,
@@ -378,13 +420,7 @@ int rt_application_init()
             sizeof(thread_usb_stack),6,5);
     rt_thread_startup(&thread_usb);
 
-    rt_thread_init(&thread_app,
-                   "app",
-                   rt_thread_entry_app,
-                   RT_NULL,
-                   &thread_app_stack[0],
-            sizeof(thread_app_stack),10,5);
-    rt_thread_startup(&thread_app);
+
 
 
     rt_thread_init(&thread_commu,
@@ -412,14 +448,9 @@ int rt_application_init()
             sizeof(thread_ld3320_stack),12,5);
     rt_thread_startup(&thread_ld3320);
     
-    rt_thread_startup(&thread_init);
+    
         
   //  Jacob_appinit();
-    mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
-    
-    sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
 
-    sem_flash=rt_sem_create ("sem_flash", 1, RT_IPC_FLAG_FIFO);
-    sem_app_init=rt_sem_create ("sem_init", 0, RT_IPC_FLAG_FIFO);
     return 0;
 }
