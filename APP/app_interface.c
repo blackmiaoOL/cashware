@@ -58,19 +58,19 @@ const u8 shift_table[]={
 void cmd_line(u8* content);
 void cmd(u8* content)
 {
-    u32 content_char_cnt=0;
-    u8 content_line_cnt=0;
-    u8 i=0;
+//    u32 content_char_cnt=0;
+//    u8 content_line_cnt=0;
+//    u8 i=0;XX
     return ;
-    while(content[content_char_cnt]!=0)
-    {
-        content_char_cnt++;
-    }
-    content_line_cnt=(content_char_cnt-1)/16+1;
-    for(i=0;i<content_line_cnt;i++)
-    {
-        cmd_line(content+i*16);
-    }
+//    while(content[content_char_cnt]!=0)
+//    {
+//        content_char_cnt++;
+//    }
+//    content_line_cnt=(content_char_cnt-1)/16+1;
+//    for(i=0;i<content_line_cnt;i++)
+//    {
+//        cmd_line(content+i*16);
+//    }
 }
 void buf_clear()
 {
@@ -269,12 +269,11 @@ bool key_handle(u8 *buf)
     //static u8 buf_pre[8]={0};
     if(ini.Debug.keyboard)
     {
-        DBG("CNT=%d",key_cap_cnt);
+        rt_kprintf("CNT=%d\r\n",key_cap_cnt);
         for(i=0;i<8;i++)
         {
-            DBG("%d\r\n",buf[i]);
+            rt_kprintf("+%d\r\n",buf[i]);
         }
-        printf("buf[0]_raw=%d\r\n",buf[0]);
     }
 
     //DBG("%c",HID_KEYBRD_Key[HID_KEYBRD_Codes[buf[2]]]);
@@ -284,7 +283,7 @@ bool key_handle(u8 *buf)
 //        buf[0]|=(1<<4) ;
 //    }
 
-   if(macro_flag)
+	if(macro_flag)
     {
         macro_record(buf);
     }
@@ -444,10 +443,15 @@ NVIC_SystemReset();
 ALIGN(RT_ALIGN_SIZE)
 char thread_app_stack[10196];
 struct rt_thread thread_app;
+extern rt_mq_t mq_key_ms;
+bool system_init=false;
 void rt_thread_entry_app(void* parameter)
 {
 //    static FATFS fs;  		//逻辑磁盘工作区.
 //    static FIL file;	  		//文件1
+	while(!system_init){
+		rt_thread_delay(50);
+	}
     u8 key_temp[2];
     cap  cap_this2;
     ctrl_filter filter;
@@ -456,7 +460,6 @@ void rt_thread_entry_app(void* parameter)
         u8 buf[9]={0};
         rt_mq_send (mq_commu, (void*)buf, 9);
     }
-    rt_sem_take(sem_flash,RT_WAITING_FOREVER);
     if(ini.Service.key_remap)
         key_remap_init();
     if(ini.Service.ahk)
@@ -466,9 +469,7 @@ void rt_thread_entry_app(void* parameter)
     if(ini.Service.lua_script)
         lua_init();
 
-    rt_sem_release(sem_flash);
-    rt_sem_release(sem_app_init);
-    cmd("Done");
+
     
     key_temp[0]=0;
     key_temp[1]='^';
@@ -515,7 +516,24 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.filter=block.filter;
     cap_this2.key_exe=reset_system;
     key_cap_add(&cap_this2);
-    
+    while(1){
+		u8 buf[8];
+		u8 buf2[8];
+		for(u8 i=0;i<8;i++){
+			buf2[i]=buf[i];
+		}
+		rt_mq_recv(mq_key_ms,buf,8,RT_WAITING_FOREVER);
+		rt_thread_delay(10);
+		if(key_capture(buf))
+		{ 
+			common_commu_send(buf2,8,COMMU_TYPE(KEYBOARD_SM));
+//			 rt_mq_send (mq_commu, (void*)buf, 9);
+		  //   rt_mb_send (mb_commu, (rt_uint32_t)buf);
+			rt_kprintf("not");
+		}else{
+			rt_kprintf("capture");
+		}
+	}
     
     
 //    key_temp[0]=2;//right ctrl

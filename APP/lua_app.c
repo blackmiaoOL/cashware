@@ -94,7 +94,7 @@ static int lua_key_put_pure(lua_State *L)
         
     if(key_handle(mail+1))
     {
-        int j=0;
+//        int j=0;
         mail[8]=92;
         commu_send(mail,9); 
     }
@@ -219,7 +219,7 @@ static int lua_key_register(lua_State *L)
     ctrl_filter filter;
     cap  cap_this;
     int num=lua_gettop(L);
-    int i=0;
+//    int i=0;
     int event=lua_tointeger(L,1);
     DBG("EVENT=%d\n",event);
     filter_Init(&filter);

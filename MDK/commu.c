@@ -37,16 +37,16 @@ u8 commu_send_byte(u8 info);
 #define IRQ_L IO0(IOCB,PIN9)
 #define IRQ_H IO1(IOCB,PIN9)
 
-#define COMMU_MQ_RECV_FINISH 0
-#define COMMU_MQ_SEND_FINISH 1
-#define COMMU_MQ_FLASH_WRITE 2
-#define COMMU_MQ_FLASH_READ 3
-#define COMMU_MQ_KB_WRITE 4
-#define COMMU_MQ_MOUSE_WRITE 5
+//#define COMMU_MQ_RECV_FINISH 0
+//#define COMMU_MQ_SEND_FINISH 1
+//#define COMMU_MQ_FLASH_WRITE 2
+//#define COMMU_MQ_FLASH_READ 3
+//#define COMMU_MQ_KB_WRITE 4
+//#define COMMU_MQ_MOUSE_WRITE 5
 
-static u8 spi_state;
-static u32 spi_send_len;
-static u8 *spi_send_buf;
+//static u8 spi_state;
+//static u32 spi_send_len;
+//static u8 *spi_send_buf;
 void commu_Init()
 {
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -215,9 +215,10 @@ void rt_thread_entry_commu_send(void* parameter){
 u32 test_data=0;
 u8 commu_handle_buf[600];
 rt_mq_t mq_commu_recv;
+rt_mq_t mq_key_ms;
 extern rt_mq_t mq_flash_read;
 void rt_thread_entry_commu(void* parameter){
-	u8 state=SELF_STATE_IDLE;
+//	u8 state=SELF_STATE_IDLE;
 	while(1){
 
 		rt_err_t result=rt_mq_recv (mq_commu_recv,commu_handle_buf,600,100);
@@ -231,7 +232,8 @@ void rt_thread_entry_commu(void* parameter){
 			switch(type){
 				case COMMU_TYPE(KEYBOARD_MS):
 					//directly return
-					common_commu_send(commu_handle_buf+3,8,COMMU_TYPE(KEYBOARD_SM));
+					rt_mq_send(mq_key_ms,commu_handle_buf+3,8);
+//					common_commu_send(commu_handle_buf+3,8,COMMU_TYPE(KEYBOARD_SM));
 					break;
 				case COMMU_TYPE(FLASH_READ_DATA):
 					rt_kprintf("flash get");
@@ -291,12 +293,12 @@ void commu_recv_handle(u8 data){
 
 void SPI3_IRQHandler(void)
 {
-    static u32  cnt = 0;
+//    static u32  cnt = 0;
     if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_TXE) == SET)
     {
 		SPI3->DR=0;
     }
-	static u32 len=0;
+//	static u32 len=0;
     if (SPI_I2S_GetITStatus(SPI3, SPI_I2S_IT_RXNE) == SET)
     {
 		u8 data= SPI3->DR;

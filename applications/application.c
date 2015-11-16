@@ -255,11 +255,12 @@ ALIGN(RT_ALIGN_SIZE)
 char thread_init_stack[20024];
 struct rt_thread
 thread_init;
+extern bool system_init;
 void rt_thread_entry_init(void* parameter)
 {
 //    rt_device_t LED_dev;
-    u8 led_value;
-    u8 i;
+//    u8 led_value;
+//    u8 i;
 	u8 result=f_mount(&fs,"/",1);
     if(result)
     {
@@ -269,6 +270,7 @@ void rt_thread_entry_init(void* parameter)
     
     ini_init();
     key_cap_Init();
+	system_init=true;
 	while(1)
 	{
         rt_thread_delay(1000);       
@@ -337,6 +339,7 @@ extern void rt_thread_entry_commu_send(void* parameter);
 extern rt_mailbox_t mb_commu_send;
 extern rt_mq_t mq_commu_recv;
 extern rt_mq_t mq_flash_read;
+extern rt_mq_t mq_key_ms;
 int rt_application_init()
 {
     
@@ -391,10 +394,9 @@ int rt_application_init()
 	mb_commu_send=rt_mb_create ("mb_commu_send", 10, RT_IPC_FLAG_FIFO);
 	mq_commu_data=rt_mq_create ("mq_commu_data", 3, 600, RT_IPC_FLAG_FIFO);
 	mq_commu_recv=rt_mq_create ("mq_commu_recv", 600, 4, RT_IPC_FLAG_FIFO);
+	mq_key_ms=rt_mq_create ("mq_key_ms", 9, 40, RT_IPC_FLAG_FIFO);	
 	
-	
-	
-	    mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
+	mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
     
     sem_commu=rt_sem_create ("sem_commu", 0, RT_IPC_FLAG_FIFO);
 
@@ -408,7 +410,6 @@ int rt_application_init()
 		
 		delay_ms2(3000);
 	}
-	while(1);
 
     
 

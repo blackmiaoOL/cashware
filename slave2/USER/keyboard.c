@@ -81,7 +81,7 @@ void keyboard_init(void){
 	while(i<sizeof(rows)-1){
 		struct GPIO_struct* io=&keyboard_gpio_rows[cnt];		
 		io->port=char2port(rows[i]);
-		printf(" p:%c",rows[i]);
+//		printf(" p:%c",rows[i]);
 		i++;
 		long num=atoi(rows+i);
 		io->pin=1<<(num%8*4);
@@ -101,12 +101,12 @@ void keyboard_init(void){
 		IOout(keyboard_gpio_cols[i].port,keyboard_gpio_cols[i].num,1);
 		GPIOC->ODR=0XFFFF;
 	}
-	printf("gpioc l %d h %d o %d i %d",GPIOC->CRL,GPIOC->CRH,GPIOC->ODR,GPIOC->IDR);
+//	printf("gpioc l %d h %d o %d i %d",GPIOC->CRL,GPIOC->CRH,GPIOC->ODR,GPIOC->IDR);
 	for(i=0;i<ROW_LEN;i++){
 		IOConfig(keyboard_gpio_rows[i].port, keyboard_gpio_rows[i].num>7, keyboard_gpio_rows[i].pin, 3);
 		IOout(keyboard_gpio_rows[i].port,keyboard_gpio_rows[i].num,1);
 	}
-	printf("gpioc l %d h %d o %d i %d",GPIOB->CRL,GPIOB->CRH,GPIOB->ODR,GPIOB->IDR);
+//	printf("gpioc l %d h %d o %d i %d",GPIOB->CRL,GPIOB->CRH,GPIOB->ODR,GPIOB->IDR);
 //	while(1){
 //		keyboard_scan();
 //		delay_ms(10);

@@ -47,19 +47,20 @@ __asm void INT_EN(void)
 }
 volatile bool keyboard_flag=false;
 u8 buf_send[600];
+u8 buf_key[9];
 void commu_recv(u8 *buf,u32 len,u8 type){
 //	printf("got%d\r\n",len);
 	INT_DIS();
 	switch(type){
 		case COMMU_TYPE(KEYBOARD_SM):
 		{			
-			buf_send[0]=0;//keyboard head
+			buf_key[0]=0;//keyboard head
 			for(u8 i=0;i<6;i++){
-				buf_send[1+i]=buf[i+1];
+				buf_key[1+i]=buf[i+1];
 //				printf("%X",buf[i+1]);
 			}	
 			keyboard_flag=true;
-					
+				
 //			keyborad_process(buf_send);
 			break;
 		}

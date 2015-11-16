@@ -31,6 +31,7 @@ u8 buf_test[512];
 u8 buf_try[]={0,0,20,0,0,0,0,0};
 extern bool keyboard_flag;
 extern u8 buf_send[9];
+extern u8 buf_key[9];
 int main(void)
 {
 //	u32 i=0;
@@ -65,13 +66,14 @@ int main(void)
 	while(1){
 		keyboard_scan();
 //		commu_send("miao\r\n",6,COMMU_TYPE(DEBUG));
-		delay_ms(10);
-//		if(keyboard_flag){
-//			printf("send%d",buf_send[3]);
-//			
-//			keyboard_flag=false;
-//			keyborad_process(buf_send);
-//		}
+		for(u8 i=0;i<10;i++){
+			if(keyboard_flag){
+			keyboard_flag=false;
+			keyborad_process(buf_key);
+			}
+			delay_ms(1);
+		}
+		
 //		u32 len;
 ////		u8 *buf=commu_read(&len);
 //		
