@@ -531,7 +531,7 @@ void rt_thread_entry_app(void* parameter)
 		if(key_capture(buf))
 		{ 
 //			common_commu_send(buf2,8,COMMU_TYPE(KEYBOARD_SM));
-			rt_mq_send (mq_key_sm, (void*)buf2, 9);
+			rt_mq_send(mq_key_sm, (void*)buf2, 9);
 		  //   rt_mb_send (mb_commu, (rt_uint32_t)buf);
 			rt_kprintf("not");
 		}else{

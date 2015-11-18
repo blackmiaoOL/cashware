@@ -34,20 +34,15 @@ extern u8 buf_send[9];
 extern u8 buf_key[9];
 int main(void)
 {
-//	u32 i=0;
-
 	Stm32_Clock_Init(9);//系统时钟设置
 	delay_init(72);		//延时初始化
-	uart_init(72,115200);
-	//USB配置
-	  
-	
+	uart_init(72,256000);
+
 	JTAG_Set(1);//for free JTAG pins
 	delay_ms(200);		
   
 	SPI_Flash_Init(); 
-//	commu_init();
-	while(SPI_Flash_ReadID()!=W25Q16)							//岇测不禍W25Q64
+	while(SPI_Flash_ReadID()!=W25Q16)
 	{
 		printf("error%X\r\n",SPI_Flash_ReadID());
 		delay_ms(500);
@@ -57,8 +52,6 @@ int main(void)
 	USB_Interrupts_Config();  
 	USB_Init();	
 	delay_ms(500);			//等待初始化完成 
-//	printf("start");
-	
 	Mass_Memory_Size[0]=4000*512;
 	Mass_Block_Size[0] =512;
 	Mass_Block_Count[0]=4000;
@@ -66,37 +59,16 @@ int main(void)
 	while(1){
 		keyboard_scan();
 //		commu_send("miao\r\n",6,COMMU_TYPE(DEBUG));
-		for(u8 i=0;i<10;i++){
+		for(u8 i=0;i<100;i++){
 			if(keyboard_flag){
-				for(u8 j=0;j<8;j++){
-					printf("%X",buf_key[j]);
-				}
-			keyboard_flag=false;
-			keyborad_process(buf_key);
+//				for(u8 j=0;j<8;j++){
+//					printf("%X",buf_key[j]);
+//				}
+				keyboard_flag=0;
+				keyborad_process(buf_key);
 			}
-			delay_ms(1);
+			delay_us(100);
 		}
-		
-//		u32 len;
-////		u8 *buf=commu_read(&len);
-//		
-//		printf(" l %d ",len);
-//		if(len>512){
-//			len=512;
-//		}
-//		for(u32 i=0;i<len;i++){
-//			printf("%c",buf[i],buf[i]);
-////			delay_ms(1);
-//		}
-//		printf("\r\n");
-//		delay_ms(100);
-////		commu_write("woierwlne",6);
-//		delay_ms(100);
-////		delay_ms(1000);	
-////		delay_ms(1000);	
-////		delay_ms(1000);	
-////		delay_ms(1000);	
-////		keyborad_process(buf_try);
 	}
 
 //	while(1)

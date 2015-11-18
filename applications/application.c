@@ -345,6 +345,7 @@ void rt_thread_entry_key_sm(void* parameter){
 		}else{//normal
 			
 		}
+		
 		common_commu_send(buf,8,COMMU_TYPE(KEYBOARD_SM));
 	}
 }

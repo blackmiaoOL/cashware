@@ -45,7 +45,7 @@ __asm void INT_EN(void)
   CPSIE f
   BX r14
 }
-volatile bool keyboard_flag=false;
+volatile u8 keyboard_flag=0;
 u8 buf_send[600];
 u8 buf_key[9];
 void commu_recv(u8 *buf,u32 len,u8 type){
@@ -68,6 +68,7 @@ void commu_recv(u8 *buf,u32 len,u8 type){
 		{
 			
 			u8 action_type=buf[0];
+			action_type=action_type;
 			u32 sector=(buf[1]<<24)+(buf[2]<<16)+(buf[3]<<8)+(buf[4]);
 			u16 cnt=(buf[5]<<8)+buf[6];
 			printf("disk %d %d \r\n",sector,cnt);
