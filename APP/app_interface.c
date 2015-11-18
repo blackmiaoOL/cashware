@@ -267,10 +267,7 @@ bool key_handle(u8 *buf)
     u8 control_key_this;
     bool result=true;
     //static u8 buf_pre[8]={0};
-    if(ini.Debug.keyboard)
-    {
-
-    }
+    
 
     //DBG("%c",HID_KEYBRD_Key[HID_KEYBRD_Codes[buf[2]]]);
 //    if(buf[0]&(1<<6))
@@ -338,7 +335,7 @@ bool key_handle(u8 *buf)
             //DBG("(%d----%d)",key_cap_cnt,cap_this->filter.key);
             if( buf[2]==cap_this->filter.key)
             {
-                DBG("I got it!\r\n");
+//                DBG("I got it!\r\n");
                 (cap_this->key_exe)(cap_this);
                 hotkey_flag=1;
                 hotkey_value=buf[2];
@@ -514,14 +511,14 @@ void rt_thread_entry_app(void* parameter)
     cap_this2.key_exe=reset_system;
     key_cap_add(&cap_this2);
     while(1){
-		u8 buf[8];
+		u8 buf[9];
 		u8 buf2[9];
 		rt_mq_recv(mq_key_ms,buf,8,RT_WAITING_FOREVER);
 		for(u8 i=0;i<8;i++){
 			buf2[i]=buf[i];
 		}
 		buf2[8]=0;//normal
-		
+		buf[8]=0;
 		rt_kprintf("CNT=%d\r\n",key_cap_cnt);
 		for(u8 i=0;i<8;i++)
 		{
@@ -531,7 +528,11 @@ void rt_thread_entry_app(void* parameter)
 		if(key_capture(buf))
 		{ 
 //			common_commu_send(buf2,8,COMMU_TYPE(KEYBOARD_SM));
-			rt_mq_send(mq_key_sm, (void*)buf2, 9);
+			if(ini.Debug.keyboard)
+			{
+				rt_mq_send(mq_key_sm, (void*)buf, 9);
+			}
+			
 		  //   rt_mb_send (mb_commu, (rt_uint32_t)buf);
 			rt_kprintf("not");
 		}else{

@@ -59,8 +59,8 @@ int main(void)
 	while(1){
 		keyboard_scan();
 //		commu_send("miao\r\n",6,COMMU_TYPE(DEBUG));
-		for(u8 i=0;i<100;i++){
-			if(keyboard_flag){
+		for(u8 i=0;i<150;i++){
+ 			if(keyboard_flag){				
 //				for(u8 j=0;j<8;j++){
 //					printf("%X",buf_key[j]);
 //				}
