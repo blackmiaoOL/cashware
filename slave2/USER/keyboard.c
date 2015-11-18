@@ -24,7 +24,7 @@ u8 key_index[5][14]={{41 ,30 ,31 ,32 ,33 ,34 ,35 ,36 ,37 ,38 ,39 ,45 ,46 ,42},
 {43 ,20 ,26 ,8  ,21 ,23 ,28 ,24 ,12 ,18 ,19 ,47 ,48 ,49},
 {57 ,4  ,22 ,7  ,9  ,10 ,11 ,13 ,14 ,15 ,51 ,52 ,40 ,40},
 {225,225,29 ,27 ,6  ,25 ,5  ,17 ,16 ,54 ,55 ,56 ,0  ,229},
-{224,227,82 ,81 ,226,44 ,0  ,0  ,224,254,255},};
+{224,227,82 ,81 ,226,44 ,0  ,0  ,228,254,255},};
 typedef struct {
 	u8 L_CTRL;  /*!< Left CTRL button. This parameter can be a value of @ref TM_USB_HIDDEVICE_Button_t enumeration */
 	u8 L_ALT;   /*!< Left ALT button. This parameter can be a value of @ref TM_USB_HIDDEVICE_Button_t enumeration */
@@ -248,16 +248,31 @@ end:
 //    rt_kprintf("\n");
 
 }
+
+u8 commu_buf_pre[8];
 void keyboard_send_commu(key_t key_buf){
 	u8 buf[8];
 	buf[0]=(key_buf.L_CTRL<<0)+(key_buf.L_SHIFT<<1)+(key_buf.L_ALT<<2)+(key_buf.L_GUI<<3)+(key_buf.R_CTRL<<4)+(key_buf.R_SHIFT<<5)+(key_buf.R_ALT<<6)+(key_buf.R_GUI<<7);
 	buf[1]=0;
 	for(u8 i=0;i<6;i++){
-		buf[2+i]=key_buf.key[i];
+		buf[2+i]=key_buf.key[i];		
 	}
-	commu_send(buf,8,COMMU_TYPE(KEYBOARD_MS));
-//	keyborad_process(buf);
-}
+	u8 send=0;
+	for(u8 i=0;i<8;i++){
+		if(buf[i]!=commu_buf_pre[i]){
+			send=1;
+			break;
+		}
+	}
+	if(send){
+		for(u8 i=0;i<8;i++){
+			commu_buf_pre[i]=buf[i];
+		}
+		commu_send(buf,8,COMMU_TYPE(KEYBOARD_MS));
+		
+	}
+} 
+
 //void keyboard_io_init(){
 //    u8 i=0,j=0;
 //    for(i=0;i<col_len;i++){

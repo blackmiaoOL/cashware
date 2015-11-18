@@ -333,18 +333,35 @@ void rt_thread_entry_test(void* parameter){
 	}
 }
 
+char thread_key_sm_stack[1024];
+struct rt_thread thread_key_sm_send;
+void rt_thread_entry_key_sm(void* parameter){
+	while(1){
+		u8 buf[9];
+		rt_mq_recv(mq_key_sm,buf,9,RT_WAITING_FOREVER);
+		if(buf[8])//auto press
+		{
+			rt_thread_delay(10);
+		}else{//normal
+			
+		}
+		common_commu_send(buf,8,COMMU_TYPE(KEYBOARD_SM));
+	}
+}
+
+
 char thread_commu_send_stack[1024];
 struct rt_thread thread_commu_send;
+
 extern void rt_thread_entry_commu_send(void* parameter);
 extern rt_mailbox_t mb_commu_send;
 extern rt_mq_t mq_commu_recv;
 extern rt_mq_t mq_flash_read;
 extern rt_mq_t mq_key_ms;
+extern rt_mq_t mq_key_sm;
 int rt_application_init()
 {
-    
-    
-	
+ 
 	rt_thread_init(&thread_commu_read,
                    "commu",
                    rt_thread_entry_commu,
@@ -378,6 +395,14 @@ int rt_application_init()
             sizeof(thread_app_stack),10,5);
     rt_thread_startup(&thread_app);
 	
+	rt_thread_init(&thread_key_sm_send,
+                   "key_sm",
+                   rt_thread_entry_key_sm,
+                   RT_NULL,
+                   &thread_key_sm_stack[0],
+            sizeof(thread_key_sm_stack),3,5);
+    rt_thread_startup(&thread_key_sm_send);
+	
 	
 	
 	
@@ -395,6 +420,7 @@ int rt_application_init()
 	mq_commu_data=rt_mq_create ("mq_commu_data", 3, 600, RT_IPC_FLAG_FIFO);
 	mq_commu_recv=rt_mq_create ("mq_commu_recv", 600, 4, RT_IPC_FLAG_FIFO);
 	mq_key_ms=rt_mq_create ("mq_key_ms", 9, 40, RT_IPC_FLAG_FIFO);	
+	mq_key_sm=rt_mq_create ("mq_key_sm", 9, 100, RT_IPC_FLAG_FIFO);	
 	
 	mq_lua=rt_mq_create ("mq_lua", 10, 100, RT_IPC_FLAG_FIFO);
     

@@ -18,7 +18,7 @@ void macro_set(cap * cap_this);
 bool macro_play(void);
 /******************macro area end******************/
 u8 read_buf[5000];
-u8 buf_out[9];
+u8 buf_out[10];
 void KEYBRD_Decode(uint8_t *pbuf);
 void buf_clear(void);
 rt_mailbox_t mb_app;
@@ -269,11 +269,7 @@ bool key_handle(u8 *buf)
     //static u8 buf_pre[8]={0};
     if(ini.Debug.keyboard)
     {
-        rt_kprintf("CNT=%d\r\n",key_cap_cnt);
-        for(i=0;i<8;i++)
-        {
-            rt_kprintf("+%d\r\n",buf[i]);
-        }
+
     }
 
     //DBG("%c",HID_KEYBRD_Key[HID_KEYBRD_Codes[buf[2]]]);
@@ -445,6 +441,7 @@ char thread_app_stack[10196];
 struct rt_thread thread_app;
 extern rt_mq_t mq_key_ms;
 bool system_init=false;
+rt_mq_t mq_key_sm;
 void rt_thread_entry_app(void* parameter)
 {
 //    static FATFS fs;  		//Âß¼­´ÅÅÌ¹¤×÷Çø.
@@ -518,16 +515,23 @@ void rt_thread_entry_app(void* parameter)
     key_cap_add(&cap_this2);
     while(1){
 		u8 buf[8];
-		u8 buf2[8];
+		u8 buf2[9];
+		rt_mq_recv(mq_key_ms,buf,8,RT_WAITING_FOREVER);
 		for(u8 i=0;i<8;i++){
 			buf2[i]=buf[i];
 		}
-		rt_mq_recv(mq_key_ms,buf,8,RT_WAITING_FOREVER);
-		rt_thread_delay(10);
+		buf2[8]=0;//normal
+		
+		rt_kprintf("CNT=%d\r\n",key_cap_cnt);
+		for(u8 i=0;i<8;i++)
+		{
+			rt_kprintf("+%d\r\n",buf[i]);
+		}
+		
 		if(key_capture(buf))
 		{ 
-			common_commu_send(buf2,8,COMMU_TYPE(KEYBOARD_SM));
-//			 rt_mq_send (mq_commu, (void*)buf, 9);
+//			common_commu_send(buf2,8,COMMU_TYPE(KEYBOARD_SM));
+			rt_mq_send (mq_key_sm, (void*)buf2, 9);
 		  //   rt_mb_send (mb_commu, (rt_uint32_t)buf);
 			rt_kprintf("not");
 		}else{

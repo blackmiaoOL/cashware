@@ -55,10 +55,10 @@ void commu_recv(u8 *buf,u32 len,u8 type){
 		case COMMU_TYPE(KEYBOARD_SM):
 		{			
 			buf_key[0]=0;//keyboard head
-			for(u8 i=0;i<6;i++){
-				buf_key[1+i]=buf[i+1];
+			for(u8 i=0;i<8;i++){
+				buf_key[1+i]=buf[i];
 //				printf("%X",buf[i+1]);
-			}	
+			}
 			keyboard_flag=true;
 				
 //			keyborad_process(buf_send);

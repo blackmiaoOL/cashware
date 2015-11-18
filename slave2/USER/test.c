@@ -68,6 +68,9 @@ int main(void)
 //		commu_send("miao\r\n",6,COMMU_TYPE(DEBUG));
 		for(u8 i=0;i<10;i++){
 			if(keyboard_flag){
+				for(u8 j=0;j<8;j++){
+					printf("%X",buf_key[j]);
+				}
 			keyboard_flag=false;
 			keyborad_process(buf_key);
 			}

@@ -55,10 +55,11 @@ struct st_key_cap{
 typedef struct st_key_cap cap;
 extern cap key_cap_free[key_cap_cnt_all];
 extern rt_uint16_t key_cap_cnt;
+extern rt_mq_t mq_key_sm;
 extern rt_mq_t mq_key_ms;
-extern u8 buf_out[9];
+extern u8 buf_out[10];
 void buf_clear(void );
-#define press  do{rt_mq_send(mq_key_ms,buf_out+1,8);rt_thread_delay(50); }while(0);
+#define press  do{buf_out[9]=1;rt_mq_send(mq_key_sm,buf_out+1,9);}while(0);
 extern const u8 key_string[key_string_num][key_stinrg_max_word];
 extern u8  key_changetable[8];
 void  key_cap_add(cap* cap_this);
